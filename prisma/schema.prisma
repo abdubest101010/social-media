@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int             @id @default(autoincrement())
+  username         String          @unique
+  email            String          @unique
+  password         String?         // Optional password
+  posts            Post[]          @relation("UserPosts")
+  comments         Comment[]       @relation("UserComments")
+  likes            Like[]          @relation("UserLikes")
+  shares           Share[]         @relation("UserShares")
+  stories          Story[]         @relation("UserStories")
+  sentRequests     FriendRequest[] @relation("SentFriendRequests")
+  receivedRequests FriendRequest[] @relation("ReceivedFriendRequests")
+  following        Following[]     @relation("UserFollowing")
+  followers        Following[]     @relation("UserFollowers")
+  blockedUsers     Block[]         @relation("UserBlockedUsers")
+  blockedBy        Block[]         @relation("UserBlockedBy")
+  accounts         Account[]       // Relation to Account model
+  sessions         Session[]       // Relation to Session model
+  authenticators   Authenticator[] // Relation to Authenticator model
+}
+
+model Post {
+  id        Int       @id @default(autoincrement())
+  content   String
+  imageUrl  String?
+  createdAt DateTime  @default(now())
+  userId    Int
+  user      User      @relation("UserPosts", fields: [userId], references: [id])
+  comments  Comment[] @relation("PostComments")
+  likes     Like[]    @relation("PostLikes")
+  shares    Share[]   @relation("PostShares")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  userId    Int
+  postId    Int
+  user      User     @relation("UserComments", fields: [userId], references: [id])
+  post      Post     @relation("PostComments", fields: [postId], references: [id])
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  postId    Int
+  createdAt DateTime @default(now())
+  user      User     @relation("UserLikes", fields: [userId], references: [id])
+  post      Post     @relation("PostLikes", fields: [postId], references: [id])
+}
+
+model Share {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  postId    Int
+  createdAt DateTime @default(now())
+  user      User     @relation("UserShares", fields: [userId], references: [id])
+  post      Post     @relation("PostShares", fields: [postId], references: [id])
+}
+
+model Story {
+  id        Int      @id @default(autoincrement())
+  content   String
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  userId    Int
+  user      User     @relation("UserStories", fields: [userId], references: [id])
+}
+
+model FriendRequest {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+  sender     User     @relation("SentFriendRequests", fields: [senderId], references: [id])
+  receiver   User     @relation("ReceivedFriendRequests", fields: [receiverId], references: [id])
+}
+
+model Following {
+  id          Int    @id @default(autoincrement())
+  followerId  Int
+  followingId Int
+  createdAt   DateTime @default(now())
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id])
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id])
+}
+
+model Block {
+  id         Int    @id @default(autoincrement())
+  blockerId  Int
+  blockedId  Int
+  createdAt  DateTime @default(now())
+  blocker    User     @relation("UserBlockedUsers", fields: [blockerId], references: [id])
+  blocked    User     @relation("UserBlockedBy", fields: [blockedId], references: [id])
+}
+
+model Account {
+  id                 Int       @id @default(autoincrement())
+  userId             Int
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  
+  access_token       String?  
+  expires_at         Int?      
+  token_type         String?   
+  scope              String?   
+  id_token           String?   
+  session_state      String?
+  user               User      @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id                 String    @id @default(cuid())
+  sessionToken       String    @unique
+  userId             Int
+  expires            DateTime
+  user               User      @relation(fields: [userId], references: [id])
+}
+
+model VerificationToken {
+  identifier         String
+  token              String    @unique
+  expires            DateTime
+
+  @@unique([identifier, token])
+}
+
+model Authenticator {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  secret        String   // Secret key for TOTP
+  verified      Boolean  @default(false) // Indicates if the authenticator is verified
+  recoveryCodes Json     // Store recovery codes as a JSON object
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id])
+}
