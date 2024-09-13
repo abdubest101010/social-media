@@ -12,6 +12,13 @@ model User {
   username         String          @unique
   email            String          @unique
   password         String?         // Optional password
+  firstName        String?         // First name of the user
+  lastName         String?         // Last name of the user
+  livingIn         String?         // Where the user lives
+  wentTo           String?         // Where the user went to school
+  worksAt          String?         // Where the user works
+  bio              String?         // Additional info about the user
+  profilePicture String? 
   posts            Post[]          @relation("UserPosts")
   comments         Comment[]       @relation("UserComments")
   likes            Like[]          @relation("UserLikes")
@@ -23,9 +30,9 @@ model User {
   followers        Following[]     @relation("UserFollowers")
   blockedUsers     Block[]         @relation("UserBlockedUsers")
   blockedBy        Block[]         @relation("UserBlockedBy")
-  accounts         Account[]       // Relation to Account model
-  sessions         Session[]       // Relation to Session model
-  authenticators   Authenticator[] // Relation to Authenticator model
+  accounts         Account[]       
+  sessions         Session[]       
+  authenticators   Authenticator[] 
 }
 
 model Post {

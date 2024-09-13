@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
-export async function POST(req) {
+export async function PUT(req) {
   const { username, email, password } = await req.json();
 
   if (!username || !email || !password) {
