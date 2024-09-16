@@ -2,7 +2,8 @@
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-
+import Post from "@/components/Post"
+import AllPosts from "@/components/AllPosts"
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -22,6 +23,8 @@ export default function Home() {
   return (
     <>
       <main>Hello world {firstName}</main>
+     <Post/>
+     <AllPosts/>
       <button
               onClick={() => signOut({ callbackUrl: '/login' })}
               className="text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition-colors"
