@@ -45,7 +45,9 @@ model Post {
   comments  Comment[] @relation("PostComments")
   likes     Like[]    @relation("PostLikes")
   shares    Share[]   @relation("PostShares")
+  likeCount Int       @default(0) // New field to store the number of likes
 }
+
 
 model Comment {
   id        Int      @id @default(autoincrement())

@@ -1,13 +1,12 @@
-// app/api/posts/route.js
+// app/api/posts/getPost/route.js
 import prisma from '@/lib/prisma';
-
-
 
 export async function GET(req) {
   try {
     const posts = await prisma.post.findMany({
       include: {
         user: true, // Include user information with each post
+        likes: true, // Include likes for each post
       },
     });
 
