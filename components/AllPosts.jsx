@@ -16,7 +16,7 @@ export default function PostsPage() {
         const res = await fetch('/api/posts/getPost');
         const data = await res.json();
 
-        // Map through posts to include user liking status and count
+        // Map through posts to include user liking status, count, and comments
         const postsWithLikeStatus = data.map((post) => {
           const likeCount = post.likes.length; // Count likes from the fetched data
           const hasLiked = post.likes.some((like) => like.userId === userId); // Check if the user has liked the post
@@ -25,10 +25,23 @@ export default function PostsPage() {
             ...post,
             hasLiked,
             likeCount, // Add the like count
+            comments: [], // Initialize comments array
+            newComment: '' // Initialize new comment input for each post
           };
         });
 
         setPosts(postsWithLikeStatus);
+
+        // Fetch comments for each post
+        for (const post of postsWithLikeStatus) {
+          const commentRes = await fetch(`/api/comments?postId=${post.id}`);
+          const comments = await commentRes.json();
+          setPosts((prevPosts) =>
+            prevPosts.map((p) =>
+              p.id === post.id ? { ...p, comments } : p
+            )
+          );
+        }
       } catch (error) {
         console.error('Failed to fetch posts:', error);
       } finally {
@@ -72,6 +85,50 @@ export default function PostsPage() {
     }
   };
 
+  const handleCommentChange = (postId, value) => {
+    // Update the specific post's newComment state
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId ? { ...post, newComment: value } : post
+      )
+    );
+  };
+
+  const handleCommentSubmit = async (postId, e) => {
+    e.preventDefault(); // Prevent page refresh
+    const post = posts.find((post) => post.id === postId);
+    if (!post.newComment) return; // Don't submit empty comments
+
+    try {
+      const res = await fetch('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, content: post.newComment, postId }),
+      });
+
+      if (res.ok) {
+        const newComment = await res.json(); // Get the newly created comment with username
+        // Optionally, update the local state to reflect the new comment
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                  ...post,
+                  comments: [...post.comments, newComment], // Add the new comment with username
+                  newComment: '', // Clear the input
+                }
+              : post
+          )
+        );
+      } else {
+        const error = await res.json();
+        console.error(error.error); // Log error for debugging
+      }
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+    }
+  };
+
   if (loading) return <div className="text-center">Loading...</div>;
 
   return (
@@ -102,7 +159,35 @@ export default function PostsPage() {
                 >
                   {post.hasLiked ? 'Unlike' : 'Like'}
                 </button>
-                <p className="text-gray-600">{post.likeCount} likes</p>
+                <p className="text-gray-600">
+                  {post.likeCount === 1 ? `${post.likeCount} like` : `${post.likeCount} likes`}
+                </p>
+              </div>
+  
+              {/* Comments Section */}
+              <div className="mt-4">
+                <h3 className="text-lg font-semibold">Comments:</h3>
+                <form onSubmit={(e) => handleCommentSubmit(post.id, e)} className="flex mt-2">
+                  <input
+                    type="text"
+                    value={post.newComment}
+                    onChange={(e) => handleCommentChange(post.id, e.target.value)}
+                    placeholder="Add a comment..."
+                    className="flex-grow border border-gray-300 rounded p-2"
+                  />
+                  <button type="submit" className="ml-2 bg-green-500 text-white px-4 rounded">
+                    Submit
+                  </button>
+                </form>
+                <div className="mt-2">
+                  {post.comments.map((comment) => (
+                    <div key={comment.id} className="border-b border-gray-200 py-2">
+                       <p className="text-gray-400 text-sm">- {comment.user.username}</p>
+                      <p className="text-gray-600">{comment.content}</p>
+                     
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           ))}
@@ -110,4 +195,5 @@ export default function PostsPage() {
       )}
     </div>
   );
+  
 }

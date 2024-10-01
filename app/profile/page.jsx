@@ -1,167 +1,54 @@
 'use client';
-import { useSession } from 'next-auth/react';
+
+import { signOut, useSession } from 'next-auth/react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 
-export default function ProfileForm({ initialProfile }) {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [livingIn, setLivingIn] = useState('');
-  const [wentTo, setWentTo] = useState('');
-  const [worksAt, setWorksAt] = useState('');
-  const [bio, setBio] = useState('');
-  const [profilePictureBase64, setProfilePictureBase64] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null); // State for image preview
-  const router = useRouter();
+export default function Home() {
   const { data: session, status } = useSession();
-  const userId = session?.user?.id;
+  const router = useRouter();
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfilePictureBase64(reader.result);
-        setImagePreview(reader.result); // Set the image preview
-      };
-      reader.readAsDataURL(file); // Convert file to Base64
-    } else {
-      console.error('No file selected');
-    }
-  };
+  // Redirect to login page if there is no session
+  if (status === 'loading') {
+    return <p className="text-center">Loading...</p>; // You can replace this with a spinner or a skeleton UI
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  if (!session) {
+    router.push('/login');
+    return null; // Prevent further rendering if redirecting
+  }
 
-    // Prepare profile data
-    const profileData = {
-      id: userId,
-      firstName,
-      lastName,
-      livingIn,
-      wentTo,
-      worksAt,
-      bio,
-      profilePicture: profilePictureBase64, // Send Base64 encoded image
-    };
-
-    try {
-      // Send profile data along with the base64 image
-      const response = await fetch('/api/profile/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(profileData),
-      });
-
-      const result = await response.json();
-      if (response.ok) {
-        console.log('Profile updated successfully', result);
-        router.push('/');
-      } else {
-        console.error('Error updating profile:', result.error);
-      }
-    } catch (error) {
-      console.error('An error occurred while updating the profile:', error);
-    }
-  };
-
+  const firstNameValue = session.user?.username || session.user?.name;
+  const email = session.user.email || "";
+  const lastName = session.user.lastName || "";
+  const livingIn = session.user.livingIn || "";
+  const wentTo = session.user.wentTo || "";
+  const worksAt = session.user.worksAt || "";
+  const picture = session.user.profilePicture || "";
+  const firstName = firstNameValue.split(' ')[0]; 
+  console.log(session,firstName, lastName, livingIn, worksAt, wentTo)
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-lg mx-auto p-8 bg-white shadow-lg rounded-lg space-y-6"
-    >
-      <h2 className="text-2xl font-semibold text-center text-gray-800">Update Profile</h2>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">First Name</label>
-        <input
-          type="text"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          required
-        />
+    <main className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-4">Hello, <span className="text-blue-600">{firstName}</span></h1>
+      <div className="bg-white rounded-lg shadow-md p-6 mb-4">
+        {lastName && <p className="text-lg">Last Name: <span className="font-semibold">{lastName}</span></p>}
+        {livingIn && <p className="text-lg">Living in: <span className="font-semibold">{livingIn}</span></p>}
+        {wentTo && <p className="text-lg">Went to: <span className="font-semibold">{wentTo}</span></p>}
+        {worksAt && <p className="text-lg">Works at: <span className="font-semibold">{worksAt}</span></p>}
+        {picture && <div className="mt-4"><img src={picture} alt="Profile Picture" className="rounded-full w-24 h-24" /></div>}
+        <p className="text-lg mt-2">Email: <span className="font-semibold">{email}</span></p>
       </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Last Name</label>
-        <input
-          type="text"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          required
-        />
+      
+      <div className="flex justify-between">
+        <Link href="/profile/edit">
+          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+            Edit Profile
+          </button>
+        </Link>
+        <button onClick={() => signOut()} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">
+          Sign Out
+        </button>
       </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Living In</label>
-        <input
-          type="text"
-          value={livingIn}
-          onChange={(e) => setLivingIn(e.target.value)}
-          className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Went To</label>
-        <input
-          type="text"
-          value={wentTo}
-          onChange={(e) => setWentTo(e.target.value)}
-          className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Works At</label>
-        <input
-          type="text"
-          value={worksAt}
-          onChange={(e) => setWorksAt(e.target.value)}
-          className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Bio</label>
-        <textarea
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-          className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        ></textarea>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Profile Picture</label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </div>
-
-      {imagePreview && (
-        <div className="text-center">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Image Preview</label>
-          <img
-            src={imagePreview}
-            alt="Profile Preview"
-            className="mx-auto w-32 h-32 rounded-full object-cover border border-gray-300"
-          />
-        </div>
-      )}
-
-      <button
-        type="submit"
-        className="w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-      >
-        Update Profile
-      </button>
-    </form>
+    </main>
   );
 }

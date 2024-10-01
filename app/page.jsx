@@ -22,7 +22,7 @@ export default function Home() {
   const firstName = email.split(' ')[0]; 
   return (
     <>
-      <main>Hello world {firstName}</main>
+      <main>Hello world <link href='/profile'>{firstName}</link></main>
      <Post/>
      <AllPosts/>
       <button
