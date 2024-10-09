@@ -19,7 +19,7 @@ const saveBase64Image = (base64Data, filePath) => {
 };
 
 // POST method to handle profile update with Base64 image
-export async function POST(req, res) {
+export async function PUT(req, res) {
   try {
     const { id, firstName, lastName, livingIn, wentTo, worksAt, bio, profilePicture } = await req.json();
 

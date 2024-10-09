@@ -48,7 +48,7 @@ export default function ProfileForm({ initialProfile }) {
     try {
       // Send profile data along with the base64 image
       const response = await fetch('/api/profile/update', {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -81,7 +81,7 @@ export default function ProfileForm({ initialProfile }) {
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
           className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          required
+          
         />
       </div>
 
@@ -92,7 +92,7 @@ export default function ProfileForm({ initialProfile }) {
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
           className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          required
+          
         />
       </div>
 

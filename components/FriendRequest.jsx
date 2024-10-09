@@ -1,83 +1,49 @@
-'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
-export default function FriendRequestList({ userId }) {
-  const [friendRequests, setFriendRequests] = useState([]);
+function FriendRequestActions({ senderId, receiverId, requestId }) {
+  const [responseMessage, setResponseMessage] = useState('');
 
-  useEffect(() => {
-    // Fetch all friend requests where the current user is the receiver
-    const fetchFriendRequests = async () => {
-      const res = await fetch(`/api/friend-request/received`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ receiverId: userId }),
-      });
-      const data = await res.json();
-      if (data.friendRequests) {
-        setFriendRequests(data.friendRequests);
-      }
-    };
+  // Send friend request
+  async function sendRequest() {
+    const response = await fetch('/api/friend-request/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ senderId, receiverId }),
+    });
+    const result = await response.json();
+    setResponseMessage(result.message || result.error);
+  }
 
-    fetchFriendRequests();
-  }, [userId]);
-
-  const acceptRequest = async (requestId) => {
-    const res = await fetch(`/api/friend-request/accept`, {
+  // Accept friend request
+  async function acceptRequest() {
+    const response = await fetch('/api/friend-request/accept', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ requestId }),
     });
+    const result = await response.json();
+    setResponseMessage(result.message || result.error);
+  }
 
-    const data = await res.json();
-    if (data.success) {
-      setFriendRequests(friendRequests.filter((request) => request.id !== requestId));
-    }
-  };
-
-  const rejectRequest = async (requestId) => {
-    const res = await fetch(`/api/friend-request/reject`, {
+  // Reject friend request
+  async function rejectRequest() {
+    const response = await fetch('/api/friend-request/reject', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ requestId }),
     });
-
-    const data = await res.json();
-    if (data.success) {
-      setFriendRequests(friendRequests.filter((request) => request.id !== requestId));
-    }
-  };
+    const result = await response.json();
+    setResponseMessage(result.message || result.error);
+  }
 
   return (
-    <div className="bg-white shadow-md rounded-lg p-4">
-      <h3 className="text-xl font-semibold mb-4">Friend Requests</h3>
-      <ul>
-        {friendRequests.map((request) => (
-          <li key={request.id} className="flex items-center justify-between p-2 border-b">
-            <div className="flex items-center">
-              <img
-                src={request.sender.profilePicture}
-                alt={request.sender.firstName}
-                className="h-10 w-10 rounded-full mr-3"
-              />
-              <span>{request.sender.firstName} {request.sender.lastName}</span>
-            </div>
-            <div>
-              <button
-                onClick={() => acceptRequest(request.id)}
-                className="bg-blue-500 text-white py-1 px-3 rounded-full hover:bg-blue-600 mr-2"
-              >
-                ✔️
-              </button>
-              <button
-                onClick={() => rejectRequest(request.id)}
-                className="bg-gray-300 py-1 px-3 rounded-full hover:bg-gray-400"
-              >
-                ❌
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+    <div>
+      <button onClick={sendRequest}>Send Friend Request</button>
+      <button onClick={acceptRequest}>Accept Friend Request</button>
+      <button onClick={rejectRequest}>Reject Friend Request</button>
+      <p>{responseMessage}</p>
     </div>
   );
 }
+
+export default FriendRequestActions;

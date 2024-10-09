@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Post from "@/components/Post"
 import AllPosts from "@/components/AllPosts"
+import FriendRequest from "@/components/FriendRequest"
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -21,10 +22,10 @@ export default function Home() {
   const email = session.user?.username || session.user?.name;
   const firstName = email.split(' ')[0]; 
   return (
-    <>
-      <main>Hello world <link href='/profile'>{firstName}</link></main>
+    <> 
+      <main>Hello world <Link href='/profile'>{firstName}</Link></main>
      <Post/>
-     <AllPosts/>
+     {/* <AllPosts/> */}
       <button
               onClick={() => signOut({ callbackUrl: '/login' })}
               className="text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition-colors"
@@ -33,7 +34,8 @@ export default function Home() {
             </button>
       <Link href={'/register'}>Register</Link>
       <Link href={'/login'}>Login</Link>
-
+      <Link href={'/posts'}> Posts</Link>
+      <Link href={'/request'}> request</Link>
     </>
   );
 }
