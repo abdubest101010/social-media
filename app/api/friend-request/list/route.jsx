@@ -1,5 +1,3 @@
-// api/friend-request/list/route.js
-
 import prisma from "@/lib/prisma"; // Import Prisma client
 
 // POST method for fetching friend requests based on userId and dynamic filters
@@ -9,6 +7,7 @@ export async function POST(req) {
     const { userId, senderId, receiverId, status } = await req.json();
 
     if (!userId) {
+      console.error('User ID is required'); // Log error
       return new Response(
         JSON.stringify({ error: "User ID is required" }),
         { status: 400 }
@@ -34,7 +33,6 @@ export async function POST(req) {
       },
     });
 
-    // Return the friend requests along with sender details
     return new Response(
       JSON.stringify({ friendRequests }),
       { status: 200 }

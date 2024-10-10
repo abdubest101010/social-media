@@ -1,36 +1,43 @@
 import prisma from '@/lib/prisma';
+import { NextResponse } from 'next/server';
 
-// Named export for POST method to accept a friend request
 export async function POST(req) {
-  const { senderId, receiverId } = await req.json();
-
   try {
-    // Find the friend request
-    const friendRequest = await prisma.friendRequest.findFirst({
-      where: {
-        senderId: parseInt(senderId),
-        receiverId: parseInt(receiverId),
-        status: 'pending',
-      },
+    // Parse request body
+    const { requestId } = await req.json();
+
+    // Fetch the friend request by ID
+    const friendRequest = await prisma.friendRequest.findUnique({
+      where: { id: requestId },
     });
 
     if (!friendRequest) {
-      return new Response(JSON.stringify({ error: 'No pending request found.' }), { status: 404 });
+      console.error('Friend request not found for ID:', requestId); // Log error
+      return NextResponse.json({ error: 'Friend request not found' }, { status: 404 });
     }
 
-    // Update the request to accepted
-    const updatedRequest = await prisma.friendRequest.update({
-      where: {
-        id: friendRequest.id,
-      },
+    if (friendRequest.status !== 'pending') {
+      console.error('Friend request already handled:', requestId); // Log error
+      return NextResponse.json({ error: 'Friend request is already handled' }, { status: 400 });
+    }
+
+    // Accept the request by updating its status
+    await prisma.friendRequest.update({
+      where: { id: requestId },
+      data: { status: 'accepted' },
+    });
+
+    // Add only the receiver as a follower of the sender
+    await prisma.following.create({
       data: {
-        status: 'accepted',
+        followerId: friendRequest.receiverId, // Receiver becomes follower
+        followingId: friendRequest.senderId,  // Sender becomes the person followed
       },
     });
 
-    return new Response(JSON.stringify({ success: true, updatedRequest }), { status: 200 });
+    return NextResponse.json({ message: 'Friend request accepted!' }, { status: 200 });
   } catch (error) {
-    console.error('Error accepting friend request:', error);
-    return new Response(JSON.stringify({ error: 'Failed to accept friend request.' }), { status: 500 });
+    console.error('Error handling friend request:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

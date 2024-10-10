@@ -1,33 +1,43 @@
 import prisma from '@/lib/prisma';
+import { NextResponse } from 'next/server';
 
-// Named export for POST method to reject a friend request
 export async function POST(req) {
-  const { senderId, receiverId } = await req.json();
-
   try {
-    // Find the friend request
-    const friendRequest = await prisma.friendRequest.findFirst({
-      where: {
-        senderId: parseInt(senderId),
-        receiverId: parseInt(receiverId),
-        status: 'pending',
-      },
+    // Parse the request body
+    const { requestId } = await req.json();
+
+    // Fetch the friend request by ID
+    const friendRequest = await prisma.friendRequest.findUnique({
+      where: { id: requestId },
     });
 
     if (!friendRequest) {
-      return new Response(JSON.stringify({ error: 'No pending request found.' }), { status: 404 });
+      console.error('Friend request not found for ID:', requestId); // Log error
+      return NextResponse.json({ error: 'Friend request not found' }, { status: 404 });
     }
 
-    // Delete the friend request to reject it
-    await prisma.friendRequest.delete({
-      where: {
-        id: friendRequest.id,
+    if (friendRequest.status !== 'pending') {
+      console.error('Friend request already handled:', requestId); // Log error
+      return NextResponse.json({ error: 'Friend request is already handled' }, { status: 400 });
+    }
+
+    // Reject the request
+    await prisma.friendRequest.update({
+      where: { id: requestId },
+      data: { status: 'rejected' },
+    });
+
+    // Block the sender from sending further requests
+    await prisma.block.create({
+      data: {
+        blockerId: friendRequest.receiverId, // The receiver is blocking the sender
+        blockedId: friendRequest.senderId,
       },
     });
 
-    return new Response(JSON.stringify({ success: true, message: 'Friend request rejected.' }), { status: 200 });
+    return NextResponse.json({ message: 'Friend request rejected and sender blocked!' }, { status: 200 });
   } catch (error) {
     console.error('Error rejecting friend request:', error);
-    return new Response(JSON.stringify({ error: 'Failed to reject friend request.' }), { status: 500 });
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
