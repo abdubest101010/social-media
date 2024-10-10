@@ -2,24 +2,23 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useParams } from 'next/navigation';
 
 export default function UserProfile({ id }) {
   const { data: session } = useSession();
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [friendRequestStatus, setFriendRequestStatus] = useState(null);
+  const [friendRequestStatus, setFriendRequestStatus] = useState(null); // Holds the friend request and block status
   const userId = session?.user?.id?.toString(); // Ensure userId is a string for comparison
 
-  // Fetch user info and check friend request status when component mounts
+  // Fetch user info and check friend request status on component mount
   useEffect(() => {
     if (id) {
       fetchUserInfo(id);
-      checkFriendRequestStatus(id);
+      checkFriendRequestStatus(id); // Check if the user has already sent a request or is blocked
     }
   }, [id]);
 
-  // Fetch user info from API
+  // Fetch the profile info for the user being viewed
   const fetchUserInfo = async (id) => {
     try {
       const res = await fetch('/api/user', {
@@ -29,6 +28,7 @@ export default function UserProfile({ id }) {
       });
 
       if (!res.ok) throw new Error('Failed to fetch user info');
+
       const data = await res.json();
       setUserInfo(data);
     } catch (error) {
@@ -38,7 +38,7 @@ export default function UserProfile({ id }) {
     }
   };
 
-  // Check the friend request status (if already sent)
+  // Check if a friend request was already sent or if the sender is blocked
   const checkFriendRequestStatus = async (receiverId) => {
     try {
       const res = await fetch('/api/friend-request/check', {
@@ -46,23 +46,27 @@ export default function UserProfile({ id }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           senderId: userId,
-          receiverId: receiverId.toString(), // Ensure receiverId is also a string
+          receiverId: receiverId.toString(),
         }),
       });
 
       const result = await res.json();
 
-      if (res.ok && result.alreadySent) {
-        setFriendRequestStatus('sent');
-      } else {
-        setFriendRequestStatus('not_sent');
+      if (res.ok) {
+        if (result.alreadyBlocked) {
+          setFriendRequestStatus('blocked'); // If the sender is blocked
+        } else if (result.alreadySent) {
+          setFriendRequestStatus('sent'); // If a request was already sent
+        } else {
+          setFriendRequestStatus('not_sent'); // If no request was sent yet
+        }
       }
     } catch (error) {
       console.error('Error checking friend request status:', error);
     }
   };
 
-  // Send friend request
+  // Send a friend request
   const sendFriendRequest = async (receiverId) => {
     try {
       const res = await fetch('/api/friend-request/send', {
@@ -104,8 +108,8 @@ export default function UserProfile({ id }) {
         <p><strong>Works At:</strong> {userInfo.worksAt}</p>
         <p><strong>Bio:</strong> {userInfo.bio}</p>
 
-        {/* Hide the button if it's the user's own profile */}
-        {userId !== id.toString() && friendRequestStatus !== 'sent' && (
+        {/* Hide the "Send Friend Request" button if the user is viewing their own profile */}
+        {userId !== id.toString() && friendRequestStatus === 'not_sent' && (
           <button
             onClick={() => sendFriendRequest(id)}
             className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
@@ -114,12 +118,17 @@ export default function UserProfile({ id }) {
           </button>
         )}
 
-        {/* If the friend request was already sent, show the message */}
+        {/* If the friend request was already sent, show this message */}
         {friendRequestStatus === 'sent' && (
           <p className="text-green-500 mt-4">You have already sent a friend request to this user.</p>
         )}
 
-        {/* If it's the logged-in user's own profile, show a message */}
+        {/* If the logged-in user is blocked, show this message */}
+        {friendRequestStatus === 'blocked' && (
+          <p className="text-red-500 mt-4">You cannot send a friend request to this user because you are blocked.</p>
+        )}
+
+        {/* If the logged-in user is viewing their own profile, no button is shown */}
         {userId === id.toString() && (
           ""
         )}
