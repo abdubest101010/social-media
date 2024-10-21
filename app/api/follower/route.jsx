@@ -21,7 +21,8 @@ export async function POST(req) {
             id: true,
             follower: {
               select: {
-                username: true // Include username in the follower object
+                username: true ,
+                id: true// Include username in the follower object
               }
             }
           }
@@ -31,7 +32,8 @@ export async function POST(req) {
             id: true,
             following: {
               select: {
-                username: true // Include username in the following object
+                username: true,
+                id: true // Include username in the following object
               }
             }
           }

@@ -3,6 +3,7 @@ import { FaHome, FaUserFriends, FaRegNewspaper, FaBell, FaUserCircle } from 'rea
 import { BiSearch } from 'react-icons/bi';
 import { BiMessageDots } from "react-icons/bi";
 import { FaUsers } from "react-icons/fa";
+import Link from 'next/link';
 const Navbar = () => {
   return (
     
@@ -14,18 +15,18 @@ const Navbar = () => {
       
       {/* Navigation Links */}
       <div className="hidden md:flex space-x-6">
-        <a href="#" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500">
+        <Link href="#" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500">
           <FaHome size={18} />
           <span>Homepage</span>
-        </a>
-        <a href="#" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500">
+        </Link>
+        <Link href="/request" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500">
           <FaUserFriends size={18} />
           <span>Friends</span>
-        </a>
-        <a href="#" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500">
+        </Link>
+        <Link href="#" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500">
           <FaRegNewspaper size={18} />
           <span>Stories</span>
-        </a>
+        </Link>
       </div>
       
       {/* Search Bar */}

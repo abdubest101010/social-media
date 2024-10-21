@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
+import Link from "next/link"; // Import Link from next/link
 
 const ProfileFollower = () => {
   const { data: session, status } = useSession(); // Get session data
@@ -36,11 +37,11 @@ const ProfileFollower = () => {
   
       const data = await res.json();
       console.log("Received data:", data); // Log the received data
-  
+        
       // Correctly map the response data to the state
       setFollowersData({
-        followers: data.followers.map((f) => ({ id: f.id, username: f.follower.username })),
-        following: data.following.map((f) => ({ id: f.id, username: f.following.username }))
+        followers: data.followers.map((f) => ({ id: f.follower.id, username: f.follower.username })),
+        following: data.following.map((f) => ({ id: f.following.id, username: f.following.username }))
       });
     } catch (error) {
       console.error('Error fetching followers/following:', error);
@@ -49,7 +50,6 @@ const ProfileFollower = () => {
     }
   };
   
-
   if (loading) return <div>Loading...</div>;
 
   return (
@@ -60,7 +60,11 @@ const ProfileFollower = () => {
         <ul>
           {followersData.followers.length > 0 ? (
             followersData.followers.map((follower) => (
-              <li key={follower.id}>{follower.username}</li>
+              <li key={follower.id}>
+                <Link href={`/request/${follower.id}`}>
+                  {follower.username} {follower.id}
+                </Link>
+              </li>
             ))
           ) : (
             <p>No followers found.</p>
@@ -73,7 +77,11 @@ const ProfileFollower = () => {
         <ul>
           {followersData.following.length > 0 ? (
             followersData.following.map((followedUser) => (
-              <li key={followedUser.id}>{followedUser.username}</li>
+              <li key={followedUser.id}>
+                <Link href={`/request/${followedUser.id}`}>
+                  {followedUser.username}{followedUser.id}
+                </Link>
+              </li>
             ))
           ) : (
             <p>No following found.</p>

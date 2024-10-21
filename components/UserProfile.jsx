@@ -124,9 +124,7 @@ export default function UserProfile({ id }) {
         )}
 
         {/* If the logged-in user is blocked, show this message */}
-        {friendRequestStatus === 'blocked' && (
-          <p className="text-red-500 mt-4">You cannot send a friend request to this user because you are blocked.</p>
-        )}
+       
 
         {/* If the logged-in user is viewing their own profile, no button is shown */}
         {userId === id.toString() && (

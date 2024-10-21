@@ -18,7 +18,7 @@ model User {
   wentTo           String?         // Where the user went to school
   worksAt          String?         // Where the user works
   bio              String?         // Additional info about the user
-  profilePicture String? 
+  profilePicture   String? 
   posts            Post[]          @relation("UserPosts")
   comments         Comment[]       @relation("UserComments")
   likes            Like[]          @relation("UserLikes")
@@ -30,6 +30,10 @@ model User {
   followers        Following[]     @relation("UserFollowers")
   blockedUsers     Block[]         @relation("UserBlockedUsers")
   blockedBy        Block[]         @relation("UserBlockedBy")
+  sentMessages     Message[]       @relation("SentMessages")   // Add this field for sent messages
+  receivedMessages Message[]       @relation("ReceivedMessages") // Add this field for received messages
+  friends1         Friend[]        @relation("UserFriends1")  // Relation for user1 in Friend
+  friends2         Friend[]        @relation("UserFriends2")  // Relation for user2 in Friend
   accounts         Account[]       
   sessions         Session[]       
   authenticators   Authenticator[] 
@@ -47,7 +51,6 @@ model Post {
   shares    Share[]   @relation("PostShares")
   likeCount Int       @default(0) // New field to store the number of likes
 }
-
 
 model Comment {
   id        Int      @id @default(autoincrement())
@@ -131,6 +134,29 @@ model Account {
   user               User      @relation(fields: [userId], references: [id])
 
   @@unique([provider, providerAccountId])
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  senderId  Int
+  receiverId Int
+  content   String
+  createdAt DateTime @default(now())
+  
+  sender    User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver  User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
+
+model Friend {
+  id         Int      @id @default(autoincrement())
+  user1Id    Int
+  user2Id    Int
+  createdAt  DateTime @default(now())
+
+  user1      User     @relation("UserFriends1", fields: [user1Id], references: [id])
+  user2      User     @relation("UserFriends2", fields: [user2Id], references: [id])
+
+  @@unique([user1Id, user2Id]) // Ensure unique friendship pair
 }
 
 model Session {

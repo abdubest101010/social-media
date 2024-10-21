@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 export async function POST(req) {
   try {
     // Parse request body
-    const { requestId } = await req.json();
+    const { requestId, senderId } = await req.json();
 
     // Fetch the friend request by ID
     const friendRequest = await prisma.friendRequest.findUnique({
@@ -30,8 +30,14 @@ export async function POST(req) {
     // Add only the receiver as a follower of the sender
     await prisma.following.create({
       data: {
-        followerId: friendRequest.receiverId, // Receiver becomes follower
-        followingId: friendRequest.senderId,  // Sender becomes the person followed
+        followerId: friendRequest.senderId, // Receiver becomes follower
+        followingId: friendRequest.receiverId,  // Sender becomes the person followed
+      },
+    });
+    await prisma.friend.create({
+      data: {
+        user1Id: friendRequest.senderId,  // Use senderId from the friend request
+        user2Id: friendRequest.receiverId, // Use receiverId from the friend request
       },
     });
 

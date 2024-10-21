@@ -20,7 +20,7 @@ export default function LoginPage() {
     });
 
     if (result.ok) {
-      router.push('/profile');
+      router.push('/');
     } else {
       setError('Invalid email or password');
     }

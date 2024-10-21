@@ -2,7 +2,8 @@
 
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
-import ProfileFollower from "@/components/ProfileFollower"
+import ProfileFollower from "@/components/ProfileFollower";
+
 const FriendRequests = () => {
   const { data: session, status } = useSession(); // Get session data
   const [friendRequests, setFriendRequests] = useState([]);
@@ -16,6 +17,7 @@ const FriendRequests = () => {
 
   useEffect(() => {
     if (status === "authenticated") {
+      console.log('Session authenticated, fetching friend requests...');
       fetchFriendRequests();
     }
   }, [status, senderId, statusFilter]); // Trigger fetching when status or filters change
@@ -23,6 +25,7 @@ const FriendRequests = () => {
   // Fetch friend requests based on dynamic filters
   const fetchFriendRequests = async () => {
     try {
+      console.log('Fetching friend requests with filters:', { senderId, statusFilter });
       let queryParams = [];
 
       if (senderId) queryParams.push(`senderId=${senderId}`);
@@ -36,15 +39,17 @@ const FriendRequests = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ userId: userId }), // Pass the user ID from the session
+        body: JSON.stringify({ userId }), // Pass the user ID from the session
       });
 
       if (!res.ok) {
+        console.error('Failed to fetch friend requests:', res.status);
         throw new Error("Failed to fetch friend requests");
       }
 
       const data = await res.json();
       setFriendRequests(data.friendRequests);
+      console.log('Friend requests received:', data.friendRequests);
     } catch (error) {
       console.error('Error fetching friend requests:', error);
     } finally {
@@ -55,20 +60,21 @@ const FriendRequests = () => {
   // Handle Accept Friend Request
   const handleAcceptRequest = async (requestId) => {
     try {
+      console.log('Accepting friend request ID:', requestId);
       const res = await fetch('/api/friend-request/accept', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ requestId }),
+        body: JSON.stringify({ requestId,senderId:userId }),
       });
 
       const data = await res.json();
       if (res.ok) {
-        console.log('Success:', data.message);
+        console.log('Friend request accepted:', data.message);
         fetchFriendRequests(); // Re-fetch friend requests after acceptance
       } else {
-        console.error('Error:', data.error);
+        console.error('Error accepting request:', data.error);
       }
     } catch (error) {
       console.error('Request failed:', error);
@@ -78,6 +84,7 @@ const FriendRequests = () => {
   // Handle Reject Friend Request
   const handleRejectRequest = async (requestId) => {
     try {
+      console.log('Rejecting friend request ID:', requestId);
       const res = await fetch('/api/friend-request/reject', {
         method: 'POST',
         headers: {
@@ -88,17 +95,16 @@ const FriendRequests = () => {
 
       const data = await res.json();
       if (res.ok) {
-        console.log('Success:', data.message);
+        console.log('Friend request rejected:', data.message);
         fetchFriendRequests(); // Re-fetch friend requests after rejection
       } else {
-        console.error('Error:', data.error);
+        console.error('Error rejecting request:', data.error);
       }
     } catch (error) {
       console.error('Request failed:', error);
     }
   };
 
-  // Show loading or unauthenticated message
   if (status === "loading") return <div>Loading session...</div>;
   if (status === "unauthenticated") return <div>Please log in to view friend requests</div>;
 
