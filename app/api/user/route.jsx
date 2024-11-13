@@ -1,17 +1,20 @@
+import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-// Named export for POST request
 export async function POST(req) {
   try {
-    const body = await req.json(); // Parse the JSON body
-    const { id } = body; // Extract the user ID from the request body
+    // Parse the request body to get `userId`
+    const { userId } = await req.json();
 
-    if (!id) {
-      return new Response(JSON.stringify({ error: 'User ID is required.' }), { status: 400 });
+    // Ensure `userId` is a valid integer
+    const parsedUserId = parseInt(userId, 10);
+    if (isNaN(parsedUserId)) {
+      return NextResponse.json({ message: 'Invalid user ID' }, { status: 400 });
     }
 
+    // Fetch the user with the specified ID
     const user = await prisma.user.findUnique({
-      where: { id: parseInt(id) }, // Assuming ID is an integer
+      where: { id: parsedUserId },
       select: {
         id: true,
         username: true,
@@ -23,30 +26,72 @@ export async function POST(req) {
         worksAt: true,
         bio: true,
         profilePicture: true,
-        
-        // Fetch associated data
-        posts: true,
-        comments: true,
-        likes: true,
-        shares: true,
-        stories: true,
+        posts: {
+          select: {
+            id: true,
+            content: true,
+            imageUrl: true,
+            createdAt: true,
+            userId: true,
+            likeCount: true,
+            comments: {
+              select: {
+                id: true,
+                content: true,
+                createdAt: true,
+                user: {
+                  select: {
+                    id: true,
+                    username: true,
+                  },
+                },
+              },
+            },
+            likes: {
+              select: {
+                id: true,
+                userId: true,
+                createdAt: true,
+              },
+            },
+            shares: true,
+            _count: {
+              select: { comments: true },
+            },
+          },
+        },
+        stories: {
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            content: true,
+            imageUrl: true,
+          },
+        },
         sentRequests: true,
         receivedRequests: true,
         following: true,
         followers: true,
         blockedUsers: true,
         blockedBy: true,
+        _count: {
+          select: {
+            following: true,
+            followers: true,
+          },
+        },
       },
     });
 
+    // Check if the user exists
     if (!user) {
-      return new Response(JSON.stringify({ error: 'User not found.' }), { status: 404 });
+      return NextResponse.json({ message: 'User not found' }, { status: 404 });
     }
 
-    // Send back the user info in the response
-    return new Response(JSON.stringify(user), { status: 200 });
+    // Return the user data
+    return NextResponse.json(user);
   } catch (error) {
-    console.error('Error fetching user data:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch user data.' }), { status: 500 });
+    console.error('Error fetching user:', error);
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }

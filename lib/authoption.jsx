@@ -1,10 +1,8 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import prisma from "@/lib/prisma"
+import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-
-
 
 export const authOptions = {
   providers: [
@@ -13,13 +11,13 @@ export const authOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       async profile(profile) {
         // Check if the user already exists
-        const user = await prisma.user.findUnique({
+        let user = await prisma.user.findUnique({
           where: { email: profile.email },
         });
 
+        // If the user does not exist, create a new one
         if (!user) {
-          // If user does not exist, create a new one without a password
-          await prisma.user.create({
+          user = await prisma.user.create({
             data: {
               username: profile.name, // or any logic to generate username
               email: profile.email,
@@ -35,11 +33,11 @@ export const authOptions = {
           });
         }
 
-        // Return profile info (as needed)
+        // Return user object with database ID for consistency
         return {
-          id: profile.sub,
-          email: profile.email,
-          name: profile.name,
+          id: user.id, // Use database ID here
+          email: user.email,
+          name: user.username,
         };
       },
     }),
@@ -61,7 +59,7 @@ export const authOptions = {
           throw new Error("No user found with this email.");
         }
 
-        // If the user is a Google user, throw an error
+        // Check if the user is a Google user
         if (!user.password) {
           throw new Error(
             "This email is linked with a Google account. Please log in with Google."
@@ -95,6 +93,7 @@ export const authOptions = {
       return token;
     },
     async session({ session, token }) {
+      // Set the session user ID to the database ID
       session.user.id = token.id;
       session.user.username = token.username;
       return session;

@@ -5,11 +5,26 @@ export async function GET(req) {
   try {
     const posts = await prisma.post.findMany({
       include: {
-        user: true, // Include user information with each post
-        likes: true,
-        comments:true // Include likes for each post
+        user: true,
+        likes: {
+          include: {
+            user: true,
+          },
+        },
+        comments: {
+          select: {
+            content: true,
+            createdAt: true,
+            user: {
+              select: {
+                username: true,
+              },
+            },
+          },
+        },
       },
     });
+    
 
     return new Response(JSON.stringify(posts), {
       status: 200,
@@ -18,6 +33,7 @@ export async function GET(req) {
       },
     });
   } catch (error) {
+    console.error("Failed to fetch posts:", error);
     return new Response(JSON.stringify({ error: 'Failed to fetch posts' }), {
       status: 500,
       headers: {

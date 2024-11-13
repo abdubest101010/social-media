@@ -72,7 +72,8 @@ const FriendRequests = () => {
       const data = await res.json();
       if (res.ok) {
         console.log('Friend request accepted:', data.message);
-        fetchFriendRequests(); // Re-fetch friend requests after acceptance
+        fetchFriendRequests();
+        window.location.reload() // Re-fetch friend requests after acceptance
       } else {
         console.error('Error accepting request:', data.error);
       }
@@ -96,7 +97,8 @@ const FriendRequests = () => {
       const data = await res.json();
       if (res.ok) {
         console.log('Friend request rejected:', data.message);
-        fetchFriendRequests(); // Re-fetch friend requests after rejection
+        fetchFriendRequests();
+        window.location.reload() // Re-fetch friend requests after rejection
       } else {
         console.error('Error rejecting request:', data.error);
       }

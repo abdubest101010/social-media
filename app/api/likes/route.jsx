@@ -1,4 +1,3 @@
-// app/api/likes/route.jsx
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
@@ -21,9 +20,19 @@ export async function POST(req) {
         postId,
         userId,
       },
+      include: {
+        user: {
+          select: {
+            username: true,
+          },
+        },
+      },
     });
 
-    return NextResponse.json(like, { status: 201 });
+    return NextResponse.json(
+      { id: like.id, postId: like.postId, userId: like.userId, username: like.user.username },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Error liking post:', error);
     return NextResponse.json({ error: 'Failed to like post' }, { status: 500 });
@@ -50,5 +59,35 @@ export async function DELETE(req) {
   } catch (error) {
     console.error('Error unliking post:', error);
     return NextResponse.json({ error: 'Failed to unlike post' }, { status: 500 });
+  }
+}
+
+export async function GET(req) {
+  try {
+    const { postId } = req.query;
+
+    // Fetch likes with usernames for the specified post
+    const likes = await prisma.like.findMany({
+      where: { postId },
+      include: {
+        user: {
+          select: {
+            username: true,
+          },
+        },
+      },
+    });
+
+    const likeData = likes.map((like) => ({
+      id: like.id,
+      userId: like.userId,
+      postId: like.postId,
+      username: like.user.username,
+    }));
+
+    return NextResponse.json(likeData, { status: 200 });
+  } catch (error) {
+    console.error('Error fetching likes:', error);
+    return NextResponse.json({ error: 'Failed to fetch likes' }, { status: 500 });
   }
 }

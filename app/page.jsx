@@ -1,114 +1,123 @@
 'use client';
+
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Post from "@/components/Post";
-import UserProfile from "@/components/UserProfile"
-import FetchFriendRequest from "@/components/fetchFriendRequest"
-export default function Home() {
-  const { data: session, status } = useSession(); // Hook for session
-  const router = useRouter(); // Hook for router
-  const [userInfo, setUserInfo] = useState(null); // Hook for user info
-  const [isInfoVisible, setIsInfoVisible] = useState(false); // Hook to toggle visibility
+import UserProfile from "@/components/UserProfile";
+import FetchFriendRequest from "@/components/FetchFriendRequest";
+import AllPosts from "@/components/AllPosts";
+import Stories from "@/components/Stories";
+import Friends from "@/components/Friends";
 
-  // Check if user is logged in and handle redirects
+export default function Home() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [userInfo, setUserInfo] = useState(null);
+  const [isInfoVisible, setIsInfoVisible] = useState(false);
+
+  // Redirect to login if unauthenticated
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/login'); // Redirect to login if not authenticated
+      router.push('/login');
     }
   }, [status, router]);
 
-  // Extract user details once session is available
- const id = session?.user?.id
-console.log(session)
-  // Fetch user info once the id is available (useEffect is always called)
+  const id = session?.user?.id;
+
+  // Fetch user info if authenticated
   useEffect(() => {
     if (id) {
       fetchUserInfo(id);
     }
-  }, [id]); // Only runs when `id` is defined
+  }, [id]);
 
   const fetchUserInfo = async (userId) => {
     try {
       const res = await fetch('/api/user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: userId }),
+        body: JSON.stringify({ userId: userId }),
       });
 
       if (!res.ok) throw new Error('Failed to fetch user info');
 
       const data = await res.json();
-      console.log(data)
-      setUserInfo(data); // Set user info into state
+      setUserInfo(data);
+
+      // Check if user needs to complete profile
+      if (!data.firstName || !data.lastName) {
+        router.push('/profile');
+      }
     } catch (error) {
       console.error('Error fetching user info:', error);
+      // Optionally, redirect to an error page or show a notification
     }
   };
 
   const toggleInfoVisibility = () => {
-    setIsInfoVisible((prev) => !prev); // Toggle visibility of user info
+    setIsInfoVisible((prev) => !prev);
   };
 
-  // Show loading state until session is determined
   if (status === 'loading') {
-    return <p>Loading...</p>; // Show a loading spinner or message
+    return <p>Loading...</p>;
   }
 
-  // Ensure session is present before rendering UI
   if (!session) {
-    return null; // Prevent rendering if session is not present
+    return router.push('/login');
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
-        
-        {/* Navigation Links at the Top */}
-        <nav className="flex justify-between mb-6">
-          <Link href="/register" className="text-blue-500 hover:underline">Register</Link>
-          <Link href="/login" className="text-blue-500 hover:underline">Login</Link>
-          <Link href="/posts" className="text-blue-500 hover:underline">Posts</Link>
-          <Link href="/request" className="text-blue-500 hover:underline">Request</Link>
-        </nav>
-
-        {/* Header with username and avatar */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Hello, {userInfo?.firstName}</h1>
-          {userInfo && (
-            <img
-              src={userInfo.profilePicture || '/default-avatar.png'} // Fallback to default image if no profile picture
-              alt="User Image"
-              className="w-16 h-16 rounded-full cursor-pointer"
-              onClick={toggleInfoVisibility} // Toggle visibility on click
-            />
-          )}
-        </div>
-
-        {/* User Info (conditionally visible) */}
-        {userInfo && isInfoVisible && (
-          <div className="mb-6 bg-gray-50 p-4 rounded-lg shadow-inner">
-            <p><strong>Username:</strong> {userInfo.username}</p>
-            <p><strong>Email:</strong> {userInfo.email}</p>
-            <p><strong>First Name:</strong> {userInfo.firstName}</p>
-            <p><strong>Last Name:</strong> {userInfo.lastName}</p>
-            <p><strong>Living In:</strong> {userInfo.livingIn}</p>
-            <p><strong>Went To:</strong> {userInfo.wentTo}</p>
-            <p><strong>Works At:</strong> {userInfo.worksAt}</p>
-            <p><strong>Bio:</strong> {userInfo.bio}</p>
+    <main className="min-h-screen bg-gray-100">
+      <div className="max-w-full mx-auto">
+        <Stories />
+        {/* Main Content */}
+        <div className="flex justify-between">
+          {/* User Profile Section on the Left */}
+          <div className="w-1/4 bg-gray-100 p-4">
+            <div className="flex items-center space-x-4 mb-4">
+              {userInfo && (
+                <img
+                  src={userInfo.profilePicture || '/default-avatar.png'}
+                  alt="User Image"
+                  className="w-12 h-12 rounded-full cursor-pointer"
+                  onClick={toggleInfoVisibility}
+                />
+              )}
+              <h2 className="text-lg font-semibold">{userInfo?.firstName}'s Profile</h2>
+            </div>
+            {userInfo && isInfoVisible && (
+              <div className="mb-6">
+                <p><strong>Username:</strong> {userInfo.username}</p>
+                <p><strong>Email:</strong> {userInfo.email}</p>
+                <p><strong>First Name:</strong> {userInfo.firstName}</p>
+                <p><strong>Last Name:</strong> {userInfo.lastName}</p>
+                <p><strong>Living In:</strong> {userInfo.livingIn}</p>
+                <p><strong>Went To:</strong> {userInfo.wentTo}</p>
+                <p><strong>Works At:</strong> {userInfo.worksAt}</p>
+                <p><strong>Bio:</strong> {userInfo.bio}</p>
+              </div>
+            )}
           </div>
-        )}
 
-        {/* Post Section */}
-        <div className="mb-6">
-          <Post />
-          <UserProfile id={id}/>
-          <FetchFriendRequest/>
+          {/* Post Section in the Center */}
+          <div className="w-1/2 bg-gray-100 p-4">
+            <h1 className="text-2xl font-bold mb-6">Hello, {userInfo?.firstName}</h1>
+            <Post />
+            <AllPosts />
+          </div>
+
+          {/* Friend Request Section on the Right */}
+          <div className="w-1/4 bg-gray-100 p-4">
+            <h2 className="text-lg font-semibold mb-4">Friend Requests</h2>
+            <FetchFriendRequest />
+            <Friends />
+          </div>
         </div>
 
         {/* Sign Out Button */}
-        <div className="flex justify-end mb-6">
+        <div className="flex justify-end mt-6">
           <button
             onClick={() => signOut({ callbackUrl: '/login' })}
             className="text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors"

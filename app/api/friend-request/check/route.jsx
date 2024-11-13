@@ -1,17 +1,22 @@
 import prisma from '@/lib/prisma';
 
 export async function POST(req) {
-  const { senderId, receiverId } = await req.json();
-
   try {
-    // Check if the sender is blocked by the receiver
-    // This part is missing, implement the block check if needed
+    const { senderId, receiverId } = await req.json();
+
+    // Ensure senderId and receiverId are integers
+    const parsedSenderId = parseInt(senderId, 10);
+    const parsedReceiverId = parseInt(receiverId, 10);
+
+    if (isNaN(parsedSenderId) || isNaN(parsedReceiverId)) {
+      return new Response(JSON.stringify({ error: 'Invalid sender or receiver ID.' }), { status: 400 });
+    }
 
     // Check if there's a pending friend request
     const existingRequest = await prisma.friendRequest.findFirst({
       where: {
-        senderId: parseInt(senderId), // Ensure senderId is an integer
-        receiverId: parseInt(receiverId), // Ensure receiverId is an integer
+        senderId: parsedSenderId,   // Ensure senderId is passed as integer
+        receiverId: parsedReceiverId,  // Ensure receiverId is passed as integer
         status: 'pending',
       },
     });
