@@ -45,16 +45,17 @@ model User {
 
 
 model Post {
-  id        Int       @id @default(autoincrement())
-  content   String
-  imageUrl  String?
-  createdAt DateTime  @default(now())
-  userId    Int
-  user      User      @relation("UserPosts", fields: [userId], references: [id])
-  comments  Comment[] @relation("PostComments")
-  likes     Like[]    @relation("PostLikes")
-  shares    Share[]   @relation("PostShares")
-  likeCount Int       @default(0) // New field to store the number of likes
+  id            Int             @id @default(autoincrement())
+  content       String
+  imageUrl      String?
+  createdAt     DateTime        @default(now())
+  userId        Int
+  user          User            @relation("UserPosts", fields: [userId], references: [id])
+  comments      Comment[]       @relation("PostComments")
+  likes         Like[]          @relation("PostLikes")
+  shares        Share[]         @relation("PostShares")
+  notifications Notification[]  @relation("PostNotifications") // Reverse relation for Notification
+  likeCount     Int             @default(0) // Field to store the number of likes
 }
 
 model Comment {
@@ -87,17 +88,20 @@ model Share {
 model Notification {
   id        Int      @id @default(autoincrement())
   userId    Int
-  senderId  Int      // Add senderId to store the ID of the sender
-  messageId Int
+  senderId  Int      // ID of the user who performed the action (like, comment, or message)
+  postId    Int?     // Optional ID of the post related to the notification
+  messageId Int?     // Optional ID of the message related to the notification
   content   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user      User     @relation("UserNotifications", fields: [userId], references: [id], map: "Notification_user_fkey") // Define the foreign key with a custom name
-  sender    User     @relation("SenderNotifications", fields: [senderId], references: [id], map: "Notification_sender_fkey")  // Relation to the sender
-  message   Message  @relation("MessageNotifications", fields: [messageId], references: [id], map: "Notification_message_fkey") // Define the foreign key with a custom name
+  user      User     @relation("UserNotifications", fields: [userId], references: [id], map: "Notification_userId_fkey")
+  sender    User     @relation("SenderNotifications", fields: [senderId], references: [id], map: "Notification_senderId_fkey")
+  post      Post?    @relation("PostNotifications", fields: [postId], references: [id], map: "Notification_postId_fkey")
+  message   Message? @relation("MessageNotifications", fields: [messageId], references: [id], map: "Notification_messageId_fkey") // Reverse relation for Message
 }
+
 
 
 
@@ -158,15 +162,14 @@ model Account {
 }
 
 model Message {
-  id          Int        @id @default(autoincrement())
+  id          Int            @id @default(autoincrement())
   senderId    Int
   receiverId  Int
   content     String
-  createdAt   DateTime   @default(now())
-  
-  sender      User       @relation("SentMessages", fields: [senderId], references: [id])
-  receiver    User       @relation("ReceivedMessages", fields: [receiverId], references: [id])
-  
+  createdAt   DateTime       @default(now())
+
+  sender      User           @relation("SentMessages", fields: [senderId], references: [id])
+  receiver    User           @relation("ReceivedMessages", fields: [receiverId], references: [id])
   notifications Notification[] @relation("MessageNotifications") // Add reverse relation for notifications
 }
 

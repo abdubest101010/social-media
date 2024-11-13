@@ -60,23 +60,30 @@ const NotificationsPage = () => {
         {error && <p className="text-red-500 mb-4">{error}</p>}
 
         {notifications.length > 0 ? (
-          notifications.map((notif) => (
-            <Link
-              key={notif.id}
-              href={`/message/${notif.senderId}`}
-              onClick={() => markAsRead(notif.id)}
-              className={`flex items-center justify-between p-4 mb-2 rounded-lg cursor-pointer ${
-                notif.isRead ? 'bg-gray-100' : 'bg-blue-50 hover:bg-blue-100'
-              }`}
-            >
-              <p className="text-sm text-gray-700 hover:text-blue-600 transition-colors duration-200 ease-in-out">
-                {notif.content}
-              </p>
-              {!notif.isRead && (
-                <span className="text-blue-600 text-xs font-semibold">Unread</span>
-              )}
-            </Link>
-          ))
+          notifications.map((notif) => {
+            // Determine the dynamic link
+            const linkHref = notif.postId
+              ? `/posts/${notif.postId}` // Link to post if postId exists
+              : `/message/${notif.senderId}`; // Otherwise, link to sender's message
+
+            return (
+              <Link
+                key={notif.id}
+                href={linkHref}
+                onClick={() => markAsRead(notif.id)}
+                className={`flex items-center justify-between p-4 mb-2 rounded-lg cursor-pointer ${
+                  notif.isRead ? 'bg-gray-100' : 'bg-blue-50 hover:bg-blue-100'
+                }`}
+              >
+                <p className="text-sm text-gray-700 hover:text-blue-600 transition-colors duration-200 ease-in-out">
+                  {notif.content}
+                </p>
+                {!notif.isRead && (
+                  <span className="text-blue-600 text-xs font-semibold">Unread</span>
+                )}
+              </Link>
+            );
+          })
         ) : (
           <p className="text-center text-gray-500">No notifications.</p>
         )}

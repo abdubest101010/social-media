@@ -38,6 +38,7 @@ export async function POST(request) {
   }
 
   try {
+    // Create the comment
     const comment = await prisma.comment.create({
       data: {
         content,
@@ -52,6 +53,19 @@ export async function POST(request) {
         },
       },
     });
+
+    // Create a notification for the post owner
+    const post = await prisma.post.findUnique({ where: { id: postId } });
+    if (post) {
+      await prisma.notification.create({
+        data: {
+          userId: post.userId, // The post owner's user ID
+          senderId: userId,    // The user who commented
+          postId: postId,      // The post related to the notification
+          content: `${comment.user.username} commented on your post.`,
+        },
+      });
+    }
 
     return new Response(JSON.stringify(comment), { status: 201 });
   } catch (error) {

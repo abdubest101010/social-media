@@ -29,6 +29,19 @@ export async function POST(req) {
       },
     });
 
+    // Create a notification for the post owner
+    const post = await prisma.post.findUnique({ where: { id: postId } });
+    if (post) {
+      await prisma.notification.create({
+        data: {
+          userId: post.userId, // The post owner's user ID
+          senderId: userId,     // The user who liked the post
+          postId: postId,       // The post related to the notification
+          content: `${like.user.username} liked your post.`,
+        },
+      });
+    }
+
     return NextResponse.json(
       { id: like.id, postId: like.postId, userId: like.userId, username: like.user.username },
       { status: 201 }
