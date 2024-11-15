@@ -1,17 +1,19 @@
 "use client";
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 
 const PostPage = () => {
   const { id } = useParams();
-  const router = useRouter();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [shareSuccess, setShareSuccess] = useState(null); // For share confirmation
+
+  // Toggles for likes, comments, and shares
   const [showLikes, setShowLikes] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [showShares, setShowShares] = useState(false);
 
-  // Helper function to calculate "time ago" format
   const timeAgo = (date) => {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
     const intervals = [
@@ -37,7 +39,7 @@ const PostPage = () => {
         try {
           const response = await fetch(`/api/posts/getPost/${id}`);
           if (!response.ok) {
-            throw new Error('Post not found');
+            throw new Error("Post not found");
           }
           const data = await response.json();
           setPost(data);
@@ -50,6 +52,27 @@ const PostPage = () => {
       fetchPost();
     }
   }, [id]);
+
+  const handleShare = async () => {
+    try {
+      const response = await fetch(`/api/share`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId: id }),
+      });
+
+      if (response.ok) {
+        const updatedPost = await response.json(); // Assuming API returns the updated post
+        setPost(updatedPost);
+        setShareSuccess("Post shared successfully!");
+        setTimeout(() => setShareSuccess(null), 3000);
+      } else {
+        throw new Error("Failed to share post");
+      }
+    } catch (error) {
+      console.error("Error sharing post:", error);
+    }
+  };
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
@@ -66,10 +89,33 @@ const PostPage = () => {
         </div>
       </div>
 
-      {/* Toggle Likes */}
+     
+
+      {/* Shares Toggle */}
+      <button
+        onClick={() => setShowShares((prev) => !prev)}
+        className="text-blue-500 font-semibold hover:underline mt-4"
+      >
+        {showShares ? "Hide Shares" : `Shares (${post.shares.length})`}
+      </button>
+      {showShares && (
+        <div className="mt-2">
+          {post.shares.length > 0 ? (
+            post.shares.map((share, index) => (
+              <p key={index} className="text-gray-700">
+                Shared by: {share.user.username}
+              </p>
+            ))
+          ) : (
+            <p className="text-gray-500">No shares yet.</p>
+          )}
+        </div>
+      )}
+
+      {/* Likes Toggle */}
       <button
         onClick={() => setShowLikes((prev) => !prev)}
-        className="text-blue-500 font-semibold hover:underline"
+        className="text-blue-500 font-semibold hover:underline mt-4"
       >
         {showLikes ? "Hide Likes" : `Likes (${post.likes.length})`}
       </button>
@@ -77,7 +123,9 @@ const PostPage = () => {
         <div className="mt-2">
           {post.likes.length > 0 ? (
             post.likes.map((like, index) => (
-              <p key={index} className="text-gray-700">Liked by: {like.user.username}</p>
+              <p key={index} className="text-gray-700">
+                Liked by: {like.user.username}
+              </p>
             ))
           ) : (
             <p className="text-gray-500">No likes yet.</p>
@@ -85,7 +133,7 @@ const PostPage = () => {
         </div>
       )}
 
-      {/* Toggle Comments */}
+      {/* Comments Toggle */}
       <button
         onClick={() => setShowComments((prev) => !prev)}
         className="text-blue-500 font-semibold hover:underline mt-4"

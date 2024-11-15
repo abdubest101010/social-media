@@ -4,12 +4,16 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import FriendsList from './ShareFriend';
 
 export default function PostsPage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const { data: session, status } = useSession();
   const userId = session?.user?.id;
+
+  const [showFriendsList, setShowFriendsList] = useState(null);
+  const [showLikes, setShowLikes] = useState(null);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -23,6 +27,7 @@ export default function PostsPage() {
           ...post,
           hasLiked: post.likes.some((like) => like.userId === userId),
           likeCount: post.likes.length,
+          shareCount: post.shareCount || 0,
           comments: post.comments || [],
           newComment: '',
           showComments: false,
@@ -66,7 +71,11 @@ export default function PostsPage() {
     }
   };
 
-  const toggleComments = (postId) => {
+  const handleShare = (postId) => {
+    setShowFriendsList((prevState) => (prevState === postId ? null : postId));
+  };
+
+  const handleCommentToggle = (postId) => {
     setPosts((prevPosts) =>
       prevPosts.map((post) =>
         post.id === postId ? { ...post, showComments: !post.showComments } : post
@@ -74,7 +83,7 @@ export default function PostsPage() {
     );
   };
 
-  const toggleLikes = (postId) => {
+  const handleLikesToggle = (postId) => {
     setPosts((prevPosts) =>
       prevPosts.map((post) =>
         post.id === postId ? { ...post, showLikes: !post.showLikes } : post
@@ -82,32 +91,32 @@ export default function PostsPage() {
     );
   };
 
-  const handleCommentChange = (postId, value) => {
+  const handleNewComment = (postId, newComment) => {
     setPosts((prevPosts) =>
       prevPosts.map((post) =>
-        post.id === postId ? { ...post, newComment: value } : post
+        post.id === postId ? { ...post, newComment } : post
       )
     );
   };
 
-  const handleCommentSubmit = async (postId, e) => {
-    e.preventDefault();
-    const post = posts.find((post) => post.id === postId);
-    if (!post.newComment) return;
-
+  const submitComment = async (postId, newComment) => {
     try {
       const res = await fetch('/api/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, content: post.newComment, postId }),
+        body: JSON.stringify({ postId, userId, content: newComment }),
       });
 
       if (res.ok) {
-        const newComment = await res.json();
+        const updatedPost = await res.json();
         setPosts((prevPosts) =>
           prevPosts.map((post) =>
             post.id === postId
-              ? { ...post, comments: [...post.comments, newComment], newComment: '' }
+              ? {
+                  ...post,
+                  comments: [...post.comments, updatedPost],
+                  newComment: '',
+                }
               : post
           )
         );
@@ -118,19 +127,27 @@ export default function PostsPage() {
   };
 
   const getTimeDifference = (createdAt) => {
-    const now = new Date();
-    const created = new Date(createdAt);
-    const diffMs = now - created;
+    const currentTime = new Date();
+    const postTime = new Date(createdAt);
+    const timeDiff = Math.floor((currentTime - postTime) / 1000);
 
-    const minutes = Math.floor(diffMs / (1000 * 60));
-    const hours = Math.floor(diffMs / (1000 * 60 * 60));
-    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-    if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-    return `${days} day${days !== 1 ? 's' : ''} ago`;
+    if (timeDiff < 60) {
+      return `${timeDiff} seconds ago`;
+    } else if (timeDiff < 3600) {
+      return `${Math.floor(timeDiff / 60)} minutes ago`;
+    } else if (timeDiff < 86400) {
+      return `${Math.floor(timeDiff / 3600)} hours ago`;
+    } else {
+      return `${Math.floor(timeDiff / 86400)} days ago`;
+    }
   };
-
+  const handleSharesToggle = (postId) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId ? { ...post, showShares: !post.showShares } : post
+      )
+    );
+  };
   if (loading) return <div className="text-center">Loading...</div>;
 
   return (
@@ -167,69 +184,91 @@ export default function PostsPage() {
                 >
                   {post.hasLiked ? 'Unlike' : 'Like'}
                 </button>
-                <p className="text-gray-600">
-                  {post.likeCount} {post.likeCount === 1 ? 'like' : 'likes'}
-                </p>
-                {post.comments.length > 0 && (
-                  <p className="text-gray-600">
-                    {post.comments.length === 1 ? `Comment: 1` : `Comments: ${post.comments.length}`}
+                {post.likeCount > 0 && (
+                  <p
+                    onClick={() => handleLikesToggle(post.id)}
+                    className="text-gray-600 cursor-pointer hover:underline"
+                  >
+                    {post.likeCount} {post.likeCount === 1 ? 'like' : 'likes'}
                   </p>
                 )}
-              </div>
-
-              {/* Conditionally display "Show Likes" button if there are likes */}
-              {post.likeCount > 0 && (
-                <button
-                  onClick={() => toggleLikes(post.id)}
-                  className="text-blue-500 hover:underline mr-4"
-                >
-                  {post.showLikes ? 'Hide Likes' : 'Show Likes'}
-                </button>
-              )}
-
-              <button
-                onClick={() => toggleComments(post.id)}
-                className="text-blue-500 hover:underline mt-2"
-              >
-                {post.showComments ? 'Hide Comments' : 'Comment'}
-              </button>
-
-              {post.showLikes && (
-                <div className="mt-4 bg-gray-50 p-4 rounded-lg shadow-inner">
-                  <h3 className="text-lg font-semibold mb-2">Liked by:</h3>
-                  <ul>
-                    {post.likes.map((like) => (
-                      <li key={like.id} className="text-gray-600">
-                        {like.user.username}
-                      </li>
-                    ))}
-                  </ul>
+                {/* Show comment button only when there are no comments */}
+                {post.comments.length === 0 ? (
+                  <button
+                    onClick={() => handleCommentToggle(post.id)}
+                    className="text-gray-600 cursor-pointer hover:underline"
+                  >
+                    Comment
+                  </button>
+                ) : (
+                  <p
+                    className="text-gray-600 cursor-pointer"
+                    onClick={() => handleCommentToggle(post.id)}
+                  >
+                    {post.comments.length} {post.comments.length === 1 ? 'comment' : 'comments'}
+                  </p>
+                )}
+                {post.shareCount > 0 && (
+                  <p
+                    onClick={() => handleSharesToggle(post.id)}
+                    className="text-gray-600 cursor-pointer hover:underline"
+                  >
+                    {post.shareCount} {post.shareCount === 1 ? 'share' : 'shares'}
+                  </p>
+                )}
+                 {post.showShares && post.shares.length > 0 && (
+                <div className="bg-gray-100 p-2 rounded mb-2">
+                  <h3 className="text-sm font-semibold mb-1">Shared by:</h3>
+                  {post.shares.map((share, index) => (
+                    <Link key={index} href={`/${share.user.id}`} passHref>
+                      <p className="text-gray-700 text-sm hover:underline">{share.user.username}</p>
+                    </Link>
+                  ))}
                 </div>
               )}
-
+                <button
+                  onClick={() => handleShare(post.id)}
+                  className="px-4 py-2 rounded bg-green-500 text-white"
+                >
+                  Share
+                </button>
+              </div>
+              {showFriendsList === post.id && <FriendsList postId={post.id} />}
+              {post.showLikes && (
+                <div className="bg-gray-100 p-2 rounded mb-2">
+                  <h3 className="text-sm font-semibold mb-1">Liked by:</h3>
+                  {post.likes.map((like) => (
+                    <Link href={`/${like.user.id}`} key={like.user.id}>
+                      <p className="text-gray-700 text-sm hover:underline">{like.user.username}</p>
+                    </Link>
+                  ))}
+                </div>
+              )}
               {post.showComments && (
-                <div className="mt-4 bg-gray-50 p-4 rounded-lg shadow-inner">
-                  <h3 className="text-lg font-semibold mb-2">Comments</h3>
-                  <form onSubmit={(e) => handleCommentSubmit(post.id, e)} className="flex mt-2">
-                    <input
-                      type="text"
-                      value={post.newComment}
-                      onChange={(e) => handleCommentChange(post.id, e.target.value)}
-                      placeholder="Add a comment..."
-                      className="flex-grow border border-gray-300 rounded p-2"
-                    />
-                    <button type="submit" className="ml-2 bg-green-500 text-white px-4 rounded">
-                      Submit
-                    </button>
-                  </form>
-                  <div className="mt-2 space-y-3">
-                    {post.comments.map((comment) => (
-                      <div key={comment.id} className="border-b border-gray-200 py-2">
-                        <p className="text-gray-500 text-sm font-medium">- {comment.user.username}</p>
-                        <p className="text-gray-700">{comment.content}</p>
-                      </div>
-                    ))}
-                  </div>
+                <div className="mt-2">
+                  {post.comments.map((comment) => (
+                    <div key={comment.id} className="flex items-start mt-2">
+                      <Link href={`/${comment.user.id}`}>
+                        <span className="text-blue-500 hover:underline font-semibold mr-2">
+                          {comment.user.username}
+                        </span>
+                      </Link>
+                      <p className="text-gray-700">{comment.content}</p>
+                    </div>
+                  ))}
+                  <input
+                    type="text"
+                    value={post.newComment}
+                    onChange={(e) => handleNewComment(post.id, e.target.value)}
+                    placeholder="Add a comment"
+                    className="mt-2 w-full p-2 border border-gray-300 rounded"
+                  />
+                  <button
+                    onClick={() => submitComment(post.id, post.newComment)}
+                    className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
+                  >
+                    Comment
+                  </button>
                 </div>
               )}
             </div>

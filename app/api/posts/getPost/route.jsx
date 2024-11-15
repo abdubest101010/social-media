@@ -1,14 +1,13 @@
-// app/api/posts/getPost/route.js
 import prisma from '@/lib/prisma';
 
 export async function GET(req) {
   try {
     const posts = await prisma.post.findMany({
       include: {
-        user: true,
+        user: true, // Post owner
         likes: {
           include: {
-            user: true,
+            user: true, // Liker's user data
           },
         },
         comments: {
@@ -17,16 +16,27 @@ export async function GET(req) {
             createdAt: true,
             user: {
               select: {
-                username: true,
+                username: true, // Commenter's username
+              },
+            },
+          },
+        },
+        shares: {
+          include: {
+            user: {
+              select: {
+                username: true, // Sharer's username
               },
             },
           },
         },
       },
     });
-    
-
-    return new Response(JSON.stringify(posts), {
+    const postsWithShareCount = posts.map((post) => ({
+      ...post,
+      shareCount: post.shares.length,
+    }));
+    return new Response(JSON.stringify(postsWithShareCount), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',

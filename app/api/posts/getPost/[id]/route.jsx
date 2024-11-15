@@ -29,6 +29,13 @@ export async function GET(request, { params }) {
             },
           },
         },
+        shares: {
+          include: {
+            user: {
+              select: { username: true }, // Sharer's username
+            },
+          },
+        },
       },
     });
 

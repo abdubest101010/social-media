@@ -1,4 +1,3 @@
-// app/posts/page.js
 'use client';
 
 import { useState } from 'react';
@@ -9,6 +8,7 @@ export default function PostForm() {
   const { data: session } = useSession();
   const [content, setContent] = useState('');
   const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null); // State for image preview
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -30,13 +30,14 @@ export default function PostForm() {
         const response = await axios.post('/api/posts', {
           id: session?.user?.id,
           content,
-          imageUrl: base64Image, // Use imageUrl
+          imageUrl: base64Image,
         });
 
         if (response.status === 201) {
           setSuccess('Post created successfully!');
           setContent('');
           setImage(null);
+          setImagePreview(null); // Clear preview after submission
         }
       } catch (error) {
         console.error('Error creating post:', error);
@@ -51,6 +52,13 @@ export default function PostForm() {
     const file = e.target.files[0];
     if (file) {
       setImage(file);
+
+      // Generate image preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreview(reader.result); // Update image preview
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -72,7 +80,23 @@ export default function PostForm() {
           className="mb-4"
         />
 
-        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
+        {imagePreview && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Image Preview:
+            </label>
+            <img
+              src={imagePreview}
+              alt="Preview"
+              className="max-w-full h-auto rounded-lg border"
+            />
+          </div>
+        )}
+
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
           Post
         </button>
       </form>
