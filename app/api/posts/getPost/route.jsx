@@ -1,54 +1,150 @@
+import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-export async function GET(req) {
+// Handle GET request: Fetch all posts
+export async function GET() {
   try {
     const posts = await prisma.post.findMany({
-      include: {
-        user: true, // Post owner
-        likes: {
-          include: {
-            user: true, // Liker's user data
+      select: {
+        id: true,
+        content: true,
+        imageUrl: true,
+        createdAt: true,
+        userId: true,
+        likeCount: true,
+        user: {
+          select: {
+            id: true,
+            username: true,
+            profilePicture: true,
           },
         },
         comments: {
           select: {
+            id: true,
             content: true,
             createdAt: true,
             user: {
               select: {
-                username: true, // Commenter's username
+                id: true,
+                username: true,
+              },
+            },
+          },
+        },
+        likes: {
+          select: {
+            id: true,
+            userId: true,
+            createdAt: true,
+            user: {
+              select: {
+                id: true,
+                username: true,
               },
             },
           },
         },
         shares: {
-          include: {
+          select: {
+            id: true,
+            userId: true,
+            createdAt: true,
             user: {
               select: {
-                username: true, // Sharer's username
+                id: true,
+                username: true,
               },
             },
           },
         },
+        _count: {
+          select: { comments: true },
+        },
       },
     });
-    const postsWithShareCount = posts.map((post) => ({
-      ...post,
-      shareCount: post.shares.length,
-    }));
-    return new Response(JSON.stringify(postsWithShareCount), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+
+    return NextResponse.json(posts);
   } catch (error) {
-    console.error("Failed to fetch posts:", error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch posts' }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
+    console.error('Error fetching all posts:', error);
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// Handle POST request: Fetch posts for a specific user
+export async function POST(req) {
+  try {
+    const { userId } = await req.json();
+
+    // Ensure `userId` is provided and valid
+    if (!userId || isNaN(parseInt(userId, 10))) {
+      return NextResponse.json({ message: 'Invalid or missing userId' }, { status: 400 });
+    }
+
+    const posts = await prisma.post.findMany({
+      where: { userId: parseInt(userId, 10) },
+      select: {
+        id: true,
+        content: true,
+        imageUrl: true,
+        createdAt: true,
+        userId: true,
+        likeCount: true,
+        user: {
+          select: {
+            id: true,
+            username: true,
+            profilePicture: true,
+          },
+        },
+        comments: {
+          select: {
+            id: true,
+            content: true,
+            createdAt: true,
+            user: {
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+          },
+        },
+        likes: {
+          select: {
+            id: true,
+            userId: true,
+            createdAt: true,
+            user: {
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+          },
+        },
+        shares: {
+          select: {
+            id: true,
+            userId: true,
+            createdAt: true,
+            user: {
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: { comments: true },
+        },
       },
     });
+
+    return NextResponse.json(posts);
+  } catch (error) {
+    console.error('Error fetching user posts:', error);
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }

@@ -63,14 +63,14 @@ export default function PostForm() {
   };
 
   return (
-    <div className="post-form border p-4 rounded-lg mb-4">
+    <div className="post-form  p-4 rounded-lg mb-4">
       <h2 className="text-xl font-bold mb-4">Create a New Post</h2>
       <form onSubmit={handleSubmit}>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="What's on your mind?"
-          className="w-full border p-2 rounded mb-4"
+          className="w-full border p-2 rounded mb-4 text-blue"
         ></textarea>
 
         <input

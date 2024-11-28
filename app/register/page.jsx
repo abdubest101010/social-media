@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import AxiosBase from "@/components/axiosBase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import ClipLoader from "react-spinners/ClipLoader";
 
 const Register = () => {
   const emailRef = useRef();
@@ -11,6 +12,7 @@ const Register = () => {
   const router = useRouter();
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [loading, setLoading] = useState(false);  // Add state for loading
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,8 +20,10 @@ const Register = () => {
     const password = passwordRef.current.value;
     const username = usernameRef.current.value;
 
+    setLoading(true);  // Set loading to true when form is submitted
+
     try {
-      const response = await AxiosBase.post("/register", {
+      const response = await AxiosBase.put("/register", {
         email,
         password,
         username,
@@ -38,6 +42,8 @@ const Register = () => {
       let message = error?.response?.data?.message || "Registration failed.";
       setError(message);
       setSuccess(null);
+    } finally {
+      setLoading(false);  // Reset loading state when the request is completed
     }
   };
 
@@ -47,6 +53,7 @@ const Register = () => {
         <h1 className="text-2xl font-bold mb-4">Register</h1>
         {success && <p className="text-green-500 mb-4">{success}</p>}
         {error && <p className="text-red-500 mb-4">{String(error)}</p>}
+        
         <div className="mb-4">
           <label htmlFor="username" className="block text-gray-700 mb-2">Username</label>
           <input
@@ -58,6 +65,7 @@ const Register = () => {
             required
           />
         </div>
+        
         <div className="mb-4">
           <label htmlFor="email" className="block text-gray-700 mb-2">Email</label>
           <input
@@ -69,6 +77,7 @@ const Register = () => {
             required
           />
         </div>
+        
         <div className="mb-4">
           <label htmlFor="password" className="block text-gray-700 mb-2">Password</label>
           <input
@@ -80,10 +89,16 @@ const Register = () => {
             required
           />
         </div>
-        <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded mb-2">
-          Register
+        
+        <button
+          type="submit"
+          className={`w-full text-white py-2 rounded mb-2 ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500'}`}
+          disabled={loading}
+        >
+          {loading ? <ClipLoader color="#ffffff" size={20} /> : 'Register'}
         </button>
       </form>
+
       <div className="mt-4">
         <p>
           If you already have an account,{" "}

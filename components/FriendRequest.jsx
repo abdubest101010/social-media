@@ -1,49 +1,58 @@
-import { useState } from 'react';
+"use client"
+import { useEffect, useState } from 'react';
+import FriendRequestActions from './FriendRequestActions';
 
-function FriendRequestActions({ senderId, receiverId, requestId }) {
-  const [responseMessage, setResponseMessage] = useState('');
+function FetchFriendRequest() {
+  const [friendRequests, setFriendRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Send friend request
-  async function sendRequest() {
-    const response = await fetch('/api/friend-request/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ senderId, receiverId }),
-    });
-    const result = await response.json();
-    setResponseMessage(result.message || result.error);
+  useEffect(() => {
+    async function fetchRequests() {
+      setLoading(true);
+      setError('');
+      try {
+        const response = await fetch('/api/friend-request');
+        if (!response.ok) {
+          throw new Error('Failed to fetch friend requests');
+        }
+        const data = await response.json();
+        setFriendRequests(data.requests || []);
+      } catch (err) {
+        console.error('Error fetching friend requests:', err);
+        setError(err.message || 'An error occurred while fetching friend requests.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchRequests();
+  }, []);
+
+  if (loading) {
+    return <p>Loading friend requests...</p>;
   }
 
-  // Accept friend request
-  async function acceptRequest() {
-    const response = await fetch('/api/friend-request/accept', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ requestId }),
-    });
-    const result = await response.json();
-    setResponseMessage(result.message || result.error);
+  if (error) {
+    return <p className="text-red-500">Error: {error}</p>;
   }
 
-  // Reject friend request
-  async function rejectRequest() {
-    const response = await fetch('/api/friend-request/reject', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ requestId }),
-    });
-    const result = await response.json();
-    setResponseMessage(result.message || result.error);
+  if (friendRequests.length === 0) {
+    return <p>No friend requests found.</p>;
   }
 
   return (
     <div>
-      <button onClick={sendRequest}>Send Friend Request</button>
-      <button onClick={acceptRequest}>Accept Friend Request</button>
-      <button onClick={rejectRequest}>Reject Friend Request</button>
-      <p>{responseMessage}</p>
+      {friendRequests.map((request) => (
+        <FriendRequestActions
+          key={request.id}
+          senderId={request.senderId}
+          receiverId={request.receiverId}
+          requestId={request.id}
+        />
+      ))}
     </div>
   );
 }
 
-export default FriendRequestActions;
+export default FetchFriendRequest;

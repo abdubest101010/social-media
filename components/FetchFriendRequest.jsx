@@ -66,7 +66,7 @@ const FriendRequests = () => {
       {friendRequests.length > 0 ? (
         <ul className="space-y-4">
           {friendRequests.map((request) => (
-            <li key={request.id} className="border p-4 rounded-lg shadow-md flex justify-between items-center">
+            <li key={request.id} className=" p-4 rounded-lg shadow-md flex justify-between items-center">
               <p className="text-gray-700 font-medium">Sender: {request.sender.username}</p>
               <div className="flex space-x-2">
                 <button

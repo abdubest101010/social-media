@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import FriendsList from './ShareFriend';
+import { AiFillLike, AiOutlineComment, AiOutlineLike, AiOutlineShareAlt } from 'react-icons/ai';
 
 export default function PostsPage() {
   const [posts, setPosts] = useState([]);
@@ -27,7 +28,7 @@ export default function PostsPage() {
           ...post,
           hasLiked: post.likes.some((like) => like.userId === userId),
           likeCount: post.likes.length,
-          shareCount: post.shareCount || 0,
+          shareCount: post.shares.length || 0,
           comments: post.comments || [],
           newComment: '',
           showComments: false,
@@ -35,6 +36,7 @@ export default function PostsPage() {
         }));
 
         setPosts(postsWithStatus);
+        console.log(postsWithStatus)
       } catch (error) {
         console.error('Failed to fetch posts:', error);
       } finally {
@@ -130,7 +132,7 @@ export default function PostsPage() {
     const currentTime = new Date();
     const postTime = new Date(createdAt);
     const timeDiff = Math.floor((currentTime - postTime) / 1000);
-
+  
     if (timeDiff < 60) {
       return `${timeDiff} seconds ago`;
     } else if (timeDiff < 3600) {
@@ -141,6 +143,7 @@ export default function PostsPage() {
       return `${Math.floor(timeDiff / 86400)} days ago`;
     }
   };
+  
   const handleSharesToggle = (postId) => {
     setPosts((prevPosts) =>
       prevPosts.map((post) =>
@@ -150,131 +153,155 @@ export default function PostsPage() {
   };
   if (loading) return <div className="text-center">Loading...</div>;
 
-  return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">All Posts</h1>
-      {posts.length === 0 ? (
-        <p className="text-gray-500">No posts available</p>
-      ) : (
-        <div className="grid grid-cols-1 gap-6">
-          {posts.map((post) => (
-            <div key={post.id} className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-center mb-2">
-                <Link href={`/${post.user.id}`}>
-                  <span className="text-blue-500 hover:underline font-semibold">{post.user.username}</span>
-                </Link>
-                <p className="text-gray-500 text-sm">{getTimeDifference(post.createdAt)}</p>
-              </div>
-              <Link href={`/posts/${post.id}`}>
-                {post.imageUrl && (
-                  <Image
-                    src={post.imageUrl}
-                    alt="Post image"
-                    width={700}
-                    height={500}
-                    className="w-full h-80 object-cover rounded mb-2"
-                  />
-                )}
-                <h2 className="text-xl font-semibold mb-2">{post.content}</h2>
-              </Link>
-              <div className="flex items-center mb-4 space-x-4">
+  return<div className="container  mx-auto px-2  sm:px-4 py-4 " >
+  
+  {posts.length === 0 ? (
+    <p className="text-gray-500 text-center">No posts available</p>
+  ) : (
+    <div className="space-y-6">
+      {posts.map((post) => (
+        <div
+          key={post.id}
+          className=" rounded-lg  p-4 sm:p-6 hover:shadow-lg transition-shadow"
+        >
+          {/* Post Header */}
+          <div className="flex justify-between items-center mb-4">
+          <Link
+  href={`/user/${post.user.id}`}
+  className="text-blue-500 hover:underline font-semibold"
+>
+    {post.user.username}
+  </Link>
+  <p className="text-blue-800 text-sm">
+    {getTimeDifference(post.createdAt)}
+  </p>
+</div>
+
+
+
+          {/* Post Content */}
+          <Link href={`/posts/${post.id}`} className="block">
+            {post.imageUrl && (
+              <Image
+                src={post.imageUrl}
+                alt="Post image"
+                width={700}
+                height={500}
+                className="w-full h-64 object-cover rounded-lg mb-4"
+              />
+            )}
+            <h2 className="text-lg font-medium text-gray-800 mb-2">{post.content}</h2>
+          </Link>
+          {/* Interaction Buttons */}
+          <div className="flex justify-between items-center text-gray-600 border-t pt-4 w-full">
+            {/* Like Button */}
+            <div className="flex items-center space-x-2 w-1/3 justify-center">
+            <button
+  onClick={() => handleLike(post.id, post.hasLiked)}
+  className={`text-xl ${post.hasLiked ? 'text-red-500' : 'text-gray-400'} hover:scale-110`}
+>
+
+                {post.hasLiked ? <AiFillLike color='blue' size={25} /> : <AiOutlineLike size={25} color='blue' />}
+              </button>
+              {post.likeCount > 0 ? (
                 <button
-                  onClick={() => handleLike(post.id, post.hasLiked)}
-                  className={`px-4 py-2 rounded ${post.hasLiked ? 'bg-red-500' : 'bg-blue-500'} text-white`}
+                  onClick={() => handleLikesToggle(post.id)}
+                  className="text-sm text-blue-900 hover:underline"
                 >
-                  {post.hasLiked ? 'Unlike' : 'Like'}
+                  {post.likeCount} Likes
                 </button>
-                {post.likeCount > 0 && (
-                  <p
-                    onClick={() => handleLikesToggle(post.id)}
-                    className="text-gray-600 cursor-pointer hover:underline"
-                  >
-                    {post.likeCount} {post.likeCount === 1 ? 'like' : 'likes'}
-                  </p>
-                )}
-                {/* Show comment button only when there are no comments */}
-                {post.comments.length === 0 ? (
+              ):<p>Like</p>}
+            </div>
+             {post.comments.length === 0 ? (
                   <button
                     onClick={() => handleCommentToggle(post.id)}
-                    className="text-gray-600 cursor-pointer hover:underline"
+                    className=" cursor-pointer hover:underline flex gap-4 text-blue-900"
                   >
-                    Comment
+                    <AiOutlineComment size={25} color='blue'/> Comment
                   </button>
                 ) : (
                   <p
-                    className="text-gray-600 cursor-pointer"
+                    className=" cursor-pointer flex gap-4 text-blue-900"
                     onClick={() => handleCommentToggle(post.id)}
                   >
-                    {post.comments.length} {post.comments.length === 1 ? 'comment' : 'comments'}
+                    <AiOutlineComment size={25} color='blue'/> {post.comments.length} {post.comments.length === 1 ? 'Comment' : 'Comments'}
                   </p>
                 )}
-                {post.shareCount > 0 && (
-                  <p
-                    onClick={() => handleSharesToggle(post.id)}
-                    className="text-gray-600 cursor-pointer hover:underline"
-                  >
-                    {post.shareCount} {post.shareCount === 1 ? 'share' : 'shares'}
-                  </p>
-                )}
-                 {post.showShares && post.shares.length > 0 && (
-                <div className="bg-gray-100 p-2 rounded mb-2">
-                  <h3 className="text-sm font-semibold mb-1">Shared by:</h3>
-                  {post.shares.map((share, index) => (
-                    <Link key={index} href={`/${share.user.id}`} passHref>
-                      <p className="text-gray-700 text-sm hover:underline">{share.user.username}</p>
-                    </Link>
-                  ))}
-                </div>
-              )}
+           
+            {/* Share Button */}
+            <div className="flex items-center space-x-2 w-1/3 justify-center mt-2 sm:mt-0">
+              <button
+                onClick={() => handleShare(post.id)}
+                className="text-xl text-gray-400 hover:text-green-500 hover:scale-110"
+              >
+                <AiOutlineShareAlt size={25} color='blue' />
+              </button>
+              {post.shareCount > 0 ? (
                 <button
-                  onClick={() => handleShare(post.id)}
-                  className="px-4 py-2 rounded bg-green-500 text-white"
+                  onClick={() => handleSharesToggle(post.id)}
+                  className="text-sm text-blue-800 hover:underline "
                 >
-                  Share
+                  {post.shares?.length} Shares
+                </button>
+              ):<p>Share</p>}
+            </div>
+          </div>
+          {/* Additional Details */}
+          {showFriendsList === post.id && <FriendsList postId={post.id} />}
+          {post.showLikes && (
+            <div className="bg-gray-100 p-3 rounded-lg mt-4">
+              <h3 className="text-sm font-semibold mb-2">Liked by:</h3>
+              {post.likes.map((like) => (
+                <Link href={`/${like.user.id}`} key={like.user.id}>
+                  <p className="text-gray-700 text-sm hover:underline">{like.user.username}</p>
+                </Link>
+              ))}
+            </div>
+          )}
+          {post.showComments && (
+            <div className="mt-4">
+              {post.comments.map((comment) => (
+                <div key={comment.id} className="flex items-start mt-2">
+                  <Link
+                    href={`/${comment.user.id}`}
+                    className="text-blue-500 hover:underline font-semibold mr-2"
+                  >
+                    {comment.user.username}
+                  </Link>
+                  <p className="text-gray-700">{comment.content}</p>
+                </div>
+              ))}
+              <div className="mt-4">
+                <input
+                  type="text"
+                  value={post.newComment}
+                  onChange={(e) => handleNewComment(post.id, e.target.value)}
+                  placeholder="Add a comment"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={() => submitComment(post.id, post.newComment)}
+                  className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  Comment
                 </button>
               </div>
-              {showFriendsList === post.id && <FriendsList postId={post.id} />}
-              {post.showLikes && (
-                <div className="bg-gray-100 p-2 rounded mb-2">
-                  <h3 className="text-sm font-semibold mb-1">Liked by:</h3>
-                  {post.likes.map((like) => (
-                    <Link href={`/${like.user.id}`} key={like.user.id}>
-                      <p className="text-gray-700 text-sm hover:underline">{like.user.username}</p>
-                    </Link>
-                  ))}
-                </div>
-              )}
-              {post.showComments && (
-                <div className="mt-2">
-                  {post.comments.map((comment) => (
-                    <div key={comment.id} className="flex items-start mt-2">
-                      <Link href={`/${comment.user.id}`}>
-                        <span className="text-blue-500 hover:underline font-semibold mr-2">
-                          {comment.user.username}
-                        </span>
-                      </Link>
-                      <p className="text-gray-700">{comment.content}</p>
-                    </div>
-                  ))}
-                  <input
-                    type="text"
-                    value={post.newComment}
-                    onChange={(e) => handleNewComment(post.id, e.target.value)}
-                    placeholder="Add a comment"
-                    className="mt-2 w-full p-2 border border-gray-300 rounded"
-                  />
-                  <button
-                    onClick={() => submitComment(post.id, post.newComment)}
-                    className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
-                  >
-                    Comment
-                  </button>
-                </div>
-              )}
             </div>
-          ))}
+          )}
+          {post.showShares && post.shares.length > 0 && (
+            <div className="bg-gray-100 p-3 rounded-lg mt-4">
+              <h3 className="text-sm font-semibold mb-2">Shared by:</h3>
+              {post.shares.map((share, index) => (
+                <Link key={index} href={`/${share.user.id}`} passHref>
+                  <p className="text-gray-700 text-sm hover:underline">{share.user.username}</p>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      ))}
     </div>
-  );
+  )}
+</div>
+
 }

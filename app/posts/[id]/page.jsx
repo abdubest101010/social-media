@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { FiMessageCircle } from "react-icons/fi";
+import { AiOutlineLike, AiOutlineShareAlt } from "react-icons/ai";
 
 const PostPage = () => {
   const { id } = useParams();
@@ -77,87 +79,94 @@ const PostPage = () => {
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
-  return (
-    <div className="p-4 max-w-lg mx-auto bg-white shadow-md rounded-lg">
-      <div className="mb-4">
-        <h2 className="text-xl font-semibold">{post.content}</h2>
-        {post.imageUrl && (
-          <img src={post.imageUrl} alt="Post image" className="w-full h-auto mt-2 rounded-lg" />
-        )}
-        <div className="flex items-center text-gray-500 text-sm mt-2">
-          <span>Posted by {post.user?.username} • {timeAgo(post.createdAt)}</span>
-        </div>
-      </div>
-
-     
-
-      {/* Shares Toggle */}
-      <button
-        onClick={() => setShowShares((prev) => !prev)}
-        className="text-blue-500 font-semibold hover:underline mt-4"
-      >
-        {showShares ? "Hide Shares" : `Shares (${post.shares.length})`}
-      </button>
-      {showShares && (
-        <div className="mt-2">
-          {post.shares.length > 0 ? (
-            post.shares.map((share, index) => (
-              <p key={index} className="text-gray-700">
-                Shared by: {share.user.username}
-              </p>
-            ))
-          ) : (
-            <p className="text-gray-500">No shares yet.</p>
-          )}
-        </div>
-      )}
-
-      {/* Likes Toggle */}
-      <button
-        onClick={() => setShowLikes((prev) => !prev)}
-        className="text-blue-500 font-semibold hover:underline mt-4"
-      >
-        {showLikes ? "Hide Likes" : `Likes (${post.likes.length})`}
-      </button>
-      {showLikes && (
-        <div className="mt-2">
-          {post.likes.length > 0 ? (
-            post.likes.map((like, index) => (
-              <p key={index} className="text-gray-700">
-                Liked by: {like.user.username}
-              </p>
-            ))
-          ) : (
-            <p className="text-gray-500">No likes yet.</p>
-          )}
-        </div>
-      )}
-
-      {/* Comments Toggle */}
-      <button
-        onClick={() => setShowComments((prev) => !prev)}
-        className="text-blue-500 font-semibold hover:underline mt-4"
-      >
-        {showComments ? "Hide Comments" : `Comments (${post.comments.length})`}
-      </button>
-      {showComments && (
-        <div className="mt-2 space-y-4">
-          {post.comments?.length > 0 ? (
-            post.comments.map((comment) => (
-              <div key={comment.id} className="bg-gray-100 p-2 rounded-lg">
-                <p className="text-gray-800">{comment.content}</p>
-                <p className="text-gray-500 text-xs mt-1">
-                  Commented by {comment.user?.username} • {timeAgo(comment.createdAt)}
-                </p>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-500">No comments yet.</p>
-          )}
-        </div>
-      )}
+  return<div className="p-6 max-w-lg mx-auto bg-white shadow-lg rounded-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out">
+  <div className="mb-6">
+    <h2 className="text-2xl font-semibold text-gray-800">{post.content}</h2>
+    {post.imageUrl && (
+      <img src={post.imageUrl} alt="Post image" className="w-full h-auto mt-4 rounded-xl shadow-md" />
+    )}
+    <div className="flex items-center text-gray-500 text-sm mt-3">
+      <span>Posted by {post.user?.username} • {timeAgo(post.createdAt)}</span>
     </div>
-  );
+  </div>
+
+  {/* Social Interaction Row (Likes, Comments, Shares) */}
+  <div className="flex space-x-6 mt-6">
+    {/* Likes Toggle with Icon (First Button) */}
+    <button
+      onClick={() => setShowLikes((prev) => !prev)}
+      className="text-blue-600 hover:text-blue-800 font-medium flex items-center space-x-2 transition duration-300"
+    >
+      {post.likes.length > 0 && (
+        <>
+          <AiOutlineLike className="text-xl" />
+          <span>{showLikes ? "Hide Likes" : `Likes (${post.likes.length})`}</span>
+        </>
+      )}
+    </button>
+
+    {/* Comments Toggle with Icon (Second Button) */}
+    <button
+      onClick={() => setShowComments((prev) => !prev)}
+      className="text-blue-600 hover:text-blue-800 font-medium flex items-center space-x-2 transition duration-300"
+    >
+      {post.comments.length > 0 && (
+        <>
+          <FiMessageCircle className="text-xl" />
+          <span>{showComments ? "Hide Comments" : `Comments (${post.comments.length})`}</span>
+        </>
+      )}
+    </button>
+
+    {/* Shares Toggle with Icon (Third Button) */}
+    <button
+      onClick={() => setShowShares((prev) => !prev)}
+      className="text-blue-600 hover:text-blue-800 font-medium flex items-center space-x-2 transition duration-300"
+    >
+      {post.shares.length > 0 && (
+        <>
+          <AiOutlineShareAlt className="text-xl" />
+          <span>{showShares ? "Hide Shares" : `Shares (${post.shares.length})`}</span>
+        </>
+      )}
+    </button>
+  </div>
+
+  {/* Show Shares Section */}
+  {showShares && post.shares.length > 0 && (
+    <div className="mt-4">
+      {post.shares.map((share, index) => (
+        <p key={index} className="text-gray-700 text-sm">Shared by: <strong>{share.user.username}</strong></p>
+      ))}
+    </div>
+  )}
+  {showShares && post.shares.length === 0 && <p className="text-gray-500 text-sm">No shares yet.</p>}
+
+  {/* Show Likes Section */}
+  {showLikes && post.likes.length > 0 && (
+    <div className="mt-4">
+      {post.likes.map((like, index) => (
+        <p key={index} className="text-gray-700 text-sm">Liked by: <strong>{like.user.username}</strong></p>
+      ))}
+    </div>
+  )}
+  {showLikes && post.likes.length === 0 && <p className="text-gray-500 text-sm">No likes yet.</p>}
+
+  {/* Show Comments Section */}
+  {showComments && post.comments.length > 0 && (
+    <div className="mt-4 space-y-3">
+      {post.comments.map((comment) => (
+        <div key={comment.id} className="bg-gray-100 p-3 rounded-lg shadow-sm">
+          <p className="text-gray-800">{comment.content}</p>
+          <p className="text-gray-500 text-xs mt-2">
+            Commented by <strong>{comment.user?.username}</strong> • {timeAgo(comment.createdAt)}
+          </p>
+        </div>
+      ))}
+    </div>
+  )}
+  {showComments && post.comments.length === 0 && <p className="text-gray-500 text-sm">No comments yet.</p>}
+</div>
 };
 
 export default PostPage;

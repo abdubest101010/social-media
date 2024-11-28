@@ -5,11 +5,17 @@ export async function PUT(req) {
   const { username, email, password } = await req.json();
 
   if (!username || !email || !password) {
-    return new Response(JSON.stringify({ message: 'All fields are required' }), { status: 400 });
+    return new Response(
+      JSON.stringify({ message: 'All fields are required' }),
+      { status: 400 }
+    );
   }
 
   if (password.length < 6) {
-    return new Response(JSON.stringify({ message: 'Password must be at least 6 characters long' }), { status: 400 });
+    return new Response(
+      JSON.stringify({ message: 'Password must be at least 6 characters long' }),
+      { status: 400 }
+    );
   }
 
   try {
@@ -23,7 +29,10 @@ export async function PUT(req) {
     });
 
     if (existingUser) {
-      return new Response(JSON.stringify({ message: 'User with this username or email already exists' }), { status: 400 });
+      return new Response(
+        JSON.stringify({ message: 'User with this username or email already exists' }),
+        { status: 400 }
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -38,6 +47,9 @@ export async function PUT(req) {
 
     return new Response(JSON.stringify(user), { status: 201 });
   } catch (error) {
-    return new Response(JSON.stringify({ error: 'Internal Server Error', details: error.message }), { status: 500 });
+    return new Response(
+      JSON.stringify({ error: 'Internal Server Error', details: error.message }),
+      { status: 500 }
+    );
   }
 }

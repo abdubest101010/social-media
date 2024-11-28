@@ -46,7 +46,7 @@ export default function FriendsList() {
       ) : (
         <ul className="space-y-4">
           {friends.map(friend => (
-            <Link href={`/message/${friend.id}`}><li key={friend.id} className="flex items-center bg-white p-4 rounded shadow">
+            <Link href={`/message/${friend.id}`}><li key={friend.id} className="flex items-center  p-4 rounded shadow">
               <img src={friend.profilePicture} alt={friend.username} className="w-12 h-12 rounded-full mr-4" />
               <span className="text-lg">{friend.firstName} {friend.lastName}</span>
             </li></Link>
