@@ -74,15 +74,15 @@ export async function GET() {
 // Handle POST request: Fetch posts for a specific user
 export async function POST(req) {
   try {
-    const { userId } = await req.json();
+    const { effectiveUserId } = await req.json();
 
     // Ensure `userId` is provided and valid
-    if (!userId || isNaN(parseInt(userId, 10))) {
+    if (!effectiveUserId || isNaN(parseInt(effectiveUserId, 10))) {
       return NextResponse.json({ message: 'Invalid or missing userId' }, { status: 400 });
     }
 
     const posts = await prisma.post.findMany({
-      where: { userId: parseInt(userId, 10) },
+      where: { userId: parseInt(effectiveUserId, 10) },
       select: {
         id: true,
         content: true,

@@ -18,18 +18,18 @@ const saveBase64Image = (base64Data, filePath) => {
 // PUT method to handle profile update with Base64 image
 export async function PUT(req, res) {
   try {
-    const { email, firstName, lastName, livingIn, wentTo, worksAt, bio, profilePicture } = await req.json();
+    const { userId, firstName, lastName, livingIn, wentTo, worksAt, bio, profilePicture } = await req.json();
 
-    // Validate email presence
-    if (!email) {
-      console.error('Email is missing in the request.');
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    
+    if (!userId) {
+      console.error('userId is missing in the request.');
+      return NextResponse.json({ error: 'userId is required' }, { status: 400 });
     }
 
     // Handle profile picture saving if present
     let profilePictureUrl = null;
     if (profilePicture) {
-      const fileName = `${email}-profile-picture.jpg`; // Use email instead of undefined 'id'
+      const fileName = `${userId}-profile-picture.jpg`; // 
       const filePath = path.join(process.cwd(), 'public', 'uploads', fileName);
       saveBase64Image(profilePicture, filePath); // Save the Base64 image
       profilePictureUrl = `/uploads/${fileName}`;
@@ -37,7 +37,7 @@ export async function PUT(req, res) {
 
     // Update the user in the Prisma database
     const updatedUser = await prisma.user.update({
-      where: { email }, // Use email to find the user to update
+      where: { id:userId }, 
       data: {
         firstName,
         lastName,

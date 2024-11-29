@@ -61,7 +61,7 @@ export default function ActiveStories() {
       <Slider {...sliderSettings}>
         {/* Create Story Section */}
         <div>
-          <Link href="/stories">
+          <Link href="/stories/post">
             <div className="story-card relative w-40 h-56 rounded-lg overflow-hidden border-2 border-blue-500 bg-white shadow-lg">
               <img
                 src="/bg.png" // Background image for create story

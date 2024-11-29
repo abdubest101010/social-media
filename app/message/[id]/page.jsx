@@ -71,7 +71,7 @@ const MessagePage = ({ params }) => {
     }
 
     try {
-      const res = await fetch('/api/message', {
+      const res = await fetch('/api/message/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

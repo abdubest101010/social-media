@@ -14,10 +14,11 @@ export default function ProfileForm() {
   const [profilePictureBase64, setProfilePictureBase64] = useState(null);
   const [imagePreview, setImagePreview] = useState(null); // State for image preview
   const [isFormValid, setIsFormValid] = useState(false); // State for form validation
+  const [errorMessage, setErrorMessage] = useState(null); // State to store error messages
 
   const router = useRouter();
   const { data: session, status } = useSession();
-  const email = session?.user?.email;
+  const userId = session?.user?.id;
 
   // Redirect to login if user is not authenticated
   useEffect(() => {
@@ -29,12 +30,12 @@ export default function ProfileForm() {
   // Fetch user info and populate the form
   useEffect(() => {
     const fetchUserInfo = async () => {
-      if (email) {
+      if (userId) {
         try {
           const response = await fetch('/api/user', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email }),
+            body: JSON.stringify({ userId }),
           });
 
           const userData = await response.json();
@@ -57,7 +58,7 @@ export default function ProfileForm() {
     };
 
     fetchUserInfo();
-  }, [email]);
+  }, [userId]);
 
   // Form validation: Ensure all fields are filled
   useEffect(() => {
@@ -85,14 +86,14 @@ export default function ProfileForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!email) {
-      console.error('Email is missing from the session.');
+    if (!userId) {
+      console.error('userId is missing from the session.');
       return;
     }
 
     // Prepare profile data
     const profileData = {
-      email,
+      userId,
       firstName,
       lastName,
       livingIn,
@@ -117,9 +118,11 @@ export default function ProfileForm() {
         router.push('/'); // Redirect to profile after update
       } else {
         console.error('Error updating profile:', result.error);
+        setErrorMessage(result.error || 'Something went wrong.');
       }
     } catch (error) {
       console.error('An error occurred while updating the profile:', error);
+      setErrorMessage('An error occurred while updating the profile.');
     }
   };
 
@@ -137,6 +140,9 @@ export default function ProfileForm() {
       >
         <h2 className="text-2xl font-semibold text-center text-gray-800">Update Profile</h2>
 
+        {/* Display error message */}
+        {errorMessage && <div className="text-red-500 text-sm text-center">{errorMessage}</div>}
+
         <div>
           <label className="block text-sm font-medium text-gray-700">First Name</label>
           <input
@@ -144,6 +150,7 @@ export default function ProfileForm() {
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder={firstName || 'Enter your first name'}
             required
           />
         </div>
@@ -155,6 +162,7 @@ export default function ProfileForm() {
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder={lastName || 'Enter your last name'}
             required
           />
         </div>
@@ -166,6 +174,7 @@ export default function ProfileForm() {
             value={livingIn}
             onChange={(e) => setLivingIn(e.target.value)}
             className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder={livingIn || 'Enter where you live'}
             required
           />
         </div>
@@ -177,6 +186,7 @@ export default function ProfileForm() {
             value={wentTo}
             onChange={(e) => setWentTo(e.target.value)}
             className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder={wentTo || 'Enter your school or university'}
             required
           />
         </div>
@@ -188,6 +198,7 @@ export default function ProfileForm() {
             value={worksAt}
             onChange={(e) => setWorksAt(e.target.value)}
             className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder={worksAt || 'Enter your workplace'}
             required
           />
         </div>
@@ -198,6 +209,7 @@ export default function ProfileForm() {
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder={bio || 'Enter something about yourself'}
             required
           ></textarea>
         </div>

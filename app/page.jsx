@@ -12,12 +12,51 @@ import Friends from '@/components/Friends';
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
-
+  const userId=session?.user?.id
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
+  const fetchUserInfo = async () => {
+    if (userId) {
+      try {
+        const response = await fetch('/api/user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId }),
+        });
+
+        const userData = await response.json();
+
+        if (response.ok) {
+          const {
+            firstName,
+            lastName,
+            livingIn,
+            wentTo,
+            worksAt,
+            bio,
+            profilePicture,
+          } = userData;
+
+          // Check if any of the required fields are empty
+          if (!firstName || !lastName || !livingIn || !wentTo || !worksAt || !bio || !profilePicture) {
+            // Redirect to '/profile' if any of the fields are empty
+            router.push('/profile');
+          } 
+        } else {
+          console.error('Failed to fetch user data');
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchUserInfo();
+  }, [userId]);
 
   if (status === 'loading' || !session) {
     return <p>Loading...</p>;

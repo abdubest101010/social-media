@@ -12,12 +12,13 @@ const Navbar = () => {
   const router = useRouter();
   const [userInfo, setUserInfo] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);  // To toggle mobile menu
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const userId = session?.user?.id;
 
-  const mobileMenuRef = useRef(null);  // Reference for mobile menu
-  const userProfileRef = useRef(null);  // Reference for profile picture click area
+  const mobileMenuRef = useRef(null);
+  const userProfileRef = useRef(null);
+  const dropdownRef = useRef(null); // Reference for the dropdown menu
 
   useEffect(() => {
     if (userId) {
@@ -37,8 +38,7 @@ const Navbar = () => {
 
       const data = await res.json();
       setUserInfo(data);
-
-      // Redirect if the user needs to complete their profile
+      console.log(data)
       if (!data.firstName || !data.lastName) {
         router.push('/profile');
       }
@@ -57,19 +57,21 @@ const Navbar = () => {
 
   const handleProfileClick = () => {
     if (userId) {
-      router.push(`/user/${userId}`);
+      router.push(`/profile`);
     }
   };
 
-  // Close mobile menu if clicked outside of the menu
+  // Close mobile menu if clicked outside of the menu or dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
         mobileMenuRef.current && !mobileMenuRef.current.contains(event.target) &&
         !userProfileRef.current?.contains(event.target) &&
-        !event.target.closest('.menu-icon') // Ensures the menu doesn't close when clicking on the menu button
+        !dropdownRef.current?.contains(event.target) && // Close dropdown if clicked outside
+        !event.target.closest('.menu-icon')
       ) {
-        setIsMobileMenuOpen(false); // Close the mobile menu
+        setIsMobileMenuOpen(false);
+        setIsDropdownOpen(false); // Close dropdown when clicking outside
       }
     };
 
@@ -80,7 +82,6 @@ const Navbar = () => {
     };
   }, []);
 
-  // Close the mobile menu when a link is clicked
   const handleLinkClick = () => {
     setIsMobileMenuOpen(false);
   };
@@ -89,7 +90,7 @@ const Navbar = () => {
     <div className="flex mx-8 justify-between items-center px-4 py-2 bg-white shadow-md relative">
       {/* Logo */}
       <div className="flex items-center space-x-2">
-        <p className="text-blue-600 font-bold text-xl">LAMASOCIAL</p>
+        <Link href='/' className="text-blue-600 font-bold text-xl">ABDUSOCIAL</Link>
       </div>
 
       {/* Mobile Hamburger Menu */}
@@ -99,39 +100,31 @@ const Navbar = () => {
 
       {/* Navigation Links for Desktop */}
       <div className="hidden md:flex space-x-6">
-        <Link href="#" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500" onClick={handleLinkClick}>
+        <Link href="/" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500" onClick={handleLinkClick}>
           <FaHome size={18} />
           <span>Homepage</span>
         </Link>
-        <Link href="/request" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500" onClick={handleLinkClick}>
+        <Link href="/Friends" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500" onClick={handleLinkClick}>
           <FaUserFriends size={18} />
           <span>Friends</span>
         </Link>
-        <Link href="#" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500" onClick={handleLinkClick}>
+        <Link href="/stories" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500" onClick={handleLinkClick}>
           <FaRegNewspaper size={18} />
           <span>Stories</span>
         </Link>
       </div>
-
-      {/* Search Bar (Hide when mobile menu is open) */}
-      {!isMobileMenuOpen && (
-        <div className="flex items-center border rounded-full px-3 py-1 bg-gray-100">
-          <BiSearch className="text-gray-400" size={18} />
-          <input
-            type="text"
-            placeholder="Search"
-            className="bg-transparent outline-none px-2 text-gray-600"
-          />
-        </div>
-      )}
 
       {/* Icons for Desktop */}
       <div className="hidden md:flex items-center space-x-4 relative">
         <Link href="/notification" onClick={handleLinkClick}>
           <FaBell size={20} className="text-gray-600 hover:text-blue-500 cursor-pointer" />
         </Link>
-        <BiMessageDots size={20} onClick={handleLinkClick} className="text-gray-600 hover:text-blue-500 cursor-pointer" />
-        <FaUsers size={20} className="text-gray-600 hover:text-blue-500 cursor-pointer" />
+        <Link href={'/message'}>
+          <BiMessageDots size={20} onClick={handleLinkClick} className="text-gray-600 hover:text-blue-500 cursor-pointer" />
+        </Link>
+        <Link href={'/Friends'}>
+          <FaUsers size={20} className="text-gray-600 hover:text-blue-500 cursor-pointer" />
+        </Link>
 
         {/* User Profile Image */}
         {userInfo && (
@@ -143,7 +136,7 @@ const Navbar = () => {
               onClick={toggleDropdown}
             />
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-50">
+              <div ref={dropdownRef} className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-50">
                 <button
                   onClick={handleProfileClick}
                   className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-blue-500 w-full text-left"
@@ -164,20 +157,17 @@ const Navbar = () => {
 
       {/* Mobile Dropdown Menu */}
       {isMobileMenuOpen && (
-        <div
-          ref={mobileMenuRef}
-          className="absolute top-0 left-0 w-full bg-white shadow-md p-4 md:hidden z-50"
-        >
+        <div ref={mobileMenuRef} className="absolute top-0 left-0 w-full bg-white shadow-md p-4 md:hidden z-50">
           <div className="flex flex-col space-y-4">
-            <Link href="#" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500" onClick={handleLinkClick}>
+            <Link href="/" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500" onClick={handleLinkClick}>
               <FaHome size={18} />
               <span>Homepage</span>
             </Link>
-            <Link href="/request" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500" onClick={handleLinkClick}>
+            <Link href="/Friends" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500" onClick={handleLinkClick}>
               <FaUserFriends size={18} />
               <span>Friends</span>
             </Link>
-            <Link href="#" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500" onClick={handleLinkClick}>
+            <Link href="/stories" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500" onClick={handleLinkClick}>
               <FaRegNewspaper size={18} />
               <span>Stories</span>
             </Link>
@@ -185,18 +175,12 @@ const Navbar = () => {
               <FaBell size={18} />
               <span>Notifications</span>
             </Link>
-            <Link href="/messages" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500" onClick={handleLinkClick}>
+            <Link href="/message" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500" onClick={handleLinkClick}>
               <BiMessageDots size={18} />
               <span>Messages</span>
             </Link>
-            <Link href="/friends" className="flex items-center space-x-1 text-gray-600 hover:text-blue-500" onClick={handleLinkClick}>
-              <FaUsers size={18} />
-              <span>Friends</span>
-            </Link>
-            <div
-              onClick={handleProfileClick}
-              className="flex items-center space-x-1 text-gray-600 hover:text-blue-500 cursor-pointer"
-            >
+
+            <div onClick={handleProfileClick} className="flex items-center space-x-1 text-gray-600 hover:text-blue-500 cursor-pointer">
               <img
                 src={userInfo?.profilePicture || '/default-avatar.png'}
                 alt="User Profile"

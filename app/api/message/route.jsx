@@ -1,56 +1,60 @@
-// API route to send a message (already implemented as POST)
-import { NextResponse } from 'next/server';
-import prisma from "@/lib/prisma"
+import prisma from "@/lib/prisma";
+
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const { senderId, receiverId, content } = body;
+    // Parse the request body to get the logged-in user ID
+    const { userId } = await req.json();
 
-    // Validate required fields
-    if (!senderId || !receiverId || !content) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "User ID is required" }), { status: 400 });
     }
 
-    // Check if the sender is blocked by the receiver
-    const isBlocked = await prisma.block.findFirst({
+    // Fetch the last message in each conversation involving the user
+    const messages = await prisma.message.findMany({
       where: {
-        blockerId: parseInt(receiverId),
-        blockedId: parseInt(senderId),
+        OR: [
+          { senderId: userId },
+          { receiverId: userId }
+        ],
       },
-    });
-
-    if (isBlocked) {
-      return NextResponse.json({ error: 'You are blocked by this user' }, { status: 403 });
-    }
-
-    // Create the message and include the sender's username in the response
-    const message = await prisma.message.create({
-      data: {
-        senderId: parseInt(senderId),
-        receiverId: parseInt(receiverId),
-        content,
-      },
-      include: {
+      orderBy: { createdAt: "desc" }, // Order messages by latest
+      distinct: ['senderId', 'receiverId'], // Get unique conversations
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
         sender: {
-          select: { username: true, id: true }, // Select both username and id
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+        receiver: {
+          select: {
+            id: true,
+            username: true,
+          },
         },
       },
     });
 
-    // Create a notification for the receiver with senderId and content including sender's username
-    await prisma.notification.create({
-      data: {
-        userId: parseInt(receiverId),
-        messageId: message.id,
-        senderId: message.sender.id, // Store the sender's id in the notification
-        content: `${message.sender.username} sent you a message: ${content}`,
-      },
+    // Format the messages for the response
+    const conversations = messages.map((message) => {
+      // Determine whether the logged-in user is the sender or receiver
+      const isSender = message.sender.id === userId;
+      const otherUser = isSender ? message.receiver : message.sender;
+
+      return {
+        userId: otherUser.id,
+        username: otherUser.username,
+        lastMessage: message.content,
+        createdAt: message.createdAt,
+      };
     });
 
-    // Return the created message including the sender's id
-    return NextResponse.json({ message }, { status: 200 });
+    return new Response(JSON.stringify(conversations), { status: 200 });
   } catch (error) {
-    console.error('Error sending message:', error);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    console.error(error);
+    return new Response(JSON.stringify({ error: "Something went wrong" }), { status: 500 });
   }
 }
