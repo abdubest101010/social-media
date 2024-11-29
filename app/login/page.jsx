@@ -50,14 +50,15 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setLoadingGoogle(true);
-
-    try {
-      await signIn('google', { callbackUrl: '/' });
-    } catch (error) {
-      setLoadingGoogle(false);
-      setError('An error occurred during Google Sign-In.');
+    const result = await signIn('google', {
+      callbackUrl: '/'  // Redirect to homepage after successful Google login
+    });
+    if (result?.ok) {
+      router.push('/');  // You can also manually redirect using the router here
     }
+    setLoadingGoogle(false);
   };
+  
 
   const handlePasswordAction = async (e) => {
     e.preventDefault();

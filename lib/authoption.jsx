@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import nodemailer from "nodemailer";
 
 export const authOptions = {
   providers: [
@@ -17,9 +18,22 @@ export const authOptions = {
 
         // If the user does not exist, create a new one
         if (!user) {
+          // Generate a unique username (e.g., using name or email, and appending random numbers if needed)
+          let username = profile.name.toLowerCase().replace(/\s+/g, '') || profile.email.split('@')[0].toLowerCase();
+          
+          // Ensure the username is unique
+          let existingUser = await prisma.user.findUnique({
+            where: { username },
+          });
+
+          if (existingUser) {
+            username = `${username}${Math.floor(Math.random() * 1000)}`;
+          }
+
+          // Create the user in the database
           user = await prisma.user.create({
             data: {
-              username: profile.name, // or any logic to generate username
+              username,
               email: profile.email,
               password: null, // No password for Google users
               accounts: {
@@ -31,6 +45,32 @@ export const authOptions = {
               },
             },
           });
+
+          // Send a welcome email to the new user
+          try {
+            const transporter = nodemailer.createTransport({
+              service: 'Gmail', // Or another email service
+              auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASSWORD,
+              },
+            });
+
+            const welcomeMessage = `
+            Welcome to our platform, ${user.username}!
+            We're excited to have you on board.`;
+
+            await transporter.sendMail({
+              from: process.env.EMAIL_USER,
+              to: user.email,
+              subject: "Welcome to our platform!",
+              text: welcomeMessage,
+            });
+
+            console.log("Welcome email sent to", user.email);
+          } catch (error) {
+            console.error("Error sending welcome email:", error);
+          }
         }
 
         // Return user object with database ID for consistency
@@ -41,6 +81,7 @@ export const authOptions = {
         };
       },
     }),
+
     CredentialsProvider({
       name: "Credentials",
       credentials: {
