@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import AxiosBase from "@/components/axiosBase";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ClipLoader from "react-spinners/ClipLoader";
