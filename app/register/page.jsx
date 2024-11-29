@@ -24,10 +24,13 @@ const Register = () => {
     setLoading(true);  // Set loading to true when form is submitted
 
     try {
-      const response = await AxiosBase.put("/register", {
-        email,
-        password,
-        username,
+     
+      const response = await fetch('/api/register', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(email,password,username),
       });
 
       if (response.status >= 200 && response.status < 300) {
