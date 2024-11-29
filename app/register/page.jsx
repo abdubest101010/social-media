@@ -4,6 +4,7 @@ import AxiosBase from "@/components/axiosBase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ClipLoader from "react-spinners/ClipLoader";
+import { signIn } from "next-auth/react";
 
 const Register = () => {
   const emailRef = useRef();
@@ -13,7 +14,7 @@ const Register = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(false);  // Add state for loading
-
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const handleSubmit = async (e) => {
     e.preventDefault();
     const email = emailRef.current.value;
@@ -45,6 +46,16 @@ const Register = () => {
     } finally {
       setLoading(false);  // Reset loading state when the request is completed
     }
+  };
+  const handleGoogleSignIn = async () => {
+    setLoadingGoogle(true);
+    const result = await signIn('google', {
+      callbackUrl: '/'  // Redirect to homepage after successful Google login
+    });
+    if (result?.ok) {
+      router.push('/');  // You can also manually redirect using the router here
+    }
+    setLoadingGoogle(false);
   };
 
   return (
@@ -97,6 +108,15 @@ const Register = () => {
         >
           {loading ? <ClipLoader color="#ffffff" size={20} /> : 'Register'}
         </button>
+        <p className="text-center text-gray-600">or</p>
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            className={`w-full text-white py-2 rounded mt-2 ${loadingGoogle ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500'}`}
+            disabled={loadingGoogle}
+          >
+            {loadingGoogle ? <ClipLoader color="#ffffff" size={20} /> : 'Sign up with Google'}
+          </button>
       </form>
 
       <div className="mt-4">
