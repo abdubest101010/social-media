@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const StoryForm = () => {
   const { data: session } = useSession();
@@ -90,8 +91,10 @@ const StoryForm = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Image Preview:
             </label>
-            <img
+            <Image
               src={imagePreview}
+              width={360}
+              height={180}
               alt="Preview"
               className="max-w-full h-auto rounded-lg border"
             />

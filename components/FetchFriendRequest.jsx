@@ -1,19 +1,13 @@
 'use client';
 import { useSession } from 'next-auth/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CheckIcon, XIcon } from '@heroicons/react/solid';
 
 const FriendRequests = () => {
   const { data: session, status } = useSession();
   const [friendRequests, setFriendRequests] = useState([]);
 
-  useEffect(() => {
-    if (status === 'authenticated') {
-      fetchFriendRequests();
-    }
-  }, [status]);
-
-  const fetchFriendRequests = async () => {
+  const fetchFriendRequests = useCallback(async () => {
     const userId = session?.user?.id;
     try {
       const res = await fetch(`/api/friend-request/list`, {
@@ -29,7 +23,13 @@ const FriendRequests = () => {
     } catch (error) {
       console.error('Error fetching friend requests:', error);
     }
-  };
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchFriendRequests();
+    }
+  }, [status, fetchFriendRequests]);
 
   const handleAccept = async (requestId) => {
     await handleRequestAction(requestId, 'accept');

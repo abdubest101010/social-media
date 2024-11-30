@@ -1,6 +1,9 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import Image from 'next/image'; // Import the Image component from Next.js
 
 export default function UserProfile({ id }) {
   const { data: session } = useSession();
@@ -10,14 +13,6 @@ export default function UserProfile({ id }) {
   const [isFriend, setIsFriend] = useState(false);
   const [post, setPost] = useState(null);
   const userId = session?.user?.id?.toString();
-
-  useEffect(() => {
-    if (id) {
-      fetchUserInfo(id);
-      checkFriendRequestStatus(id);
-      checkIfFriends(id);
-    }
-  }, [id]);
 
   const fetchUserInfo = async (id) => {
     try {
@@ -98,16 +93,27 @@ export default function UserProfile({ id }) {
     }
   };
 
+  // Fetch user info and check friendship status
+  useEffect(() => {
+    if (id) {
+      fetchUserInfo(id);
+      checkFriendRequestStatus(id);
+      checkIfFriends(id);
+    }
+  }, [id]); // Only include 'id' in the dependency array
+
   if (loading) return <div>Loading...</div>;
   if (!userInfo) return <div>No user information available</div>;
 
   return (
     <div className="container mx-auto p-4">
       <div className="flex flex-col items-center">
-      <img
-          src={userInfo.profilePicture || '/default-avatar.png'}
+        <Image
+          src={userInfo.profilePicture || '/default-avatar.png'} // Use default image if no profilePicture
           alt="Profile"
-          className="w-32 h-32 rounded-full border-4 border-white shadow-lg"
+          width={128} // Set width for the image
+          height={128} // Set height for the image
+          className="rounded-full border-4 border-white shadow-lg"
         />
         <h1 className="text-3xl font-bold text-center">
           {userInfo.firstName} {userInfo.lastName}

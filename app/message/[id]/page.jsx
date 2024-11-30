@@ -22,9 +22,11 @@ const MessagePage = ({ params }) => {
       fetchMessages();
       checkBlockStatus();
     }
-  }, [userId, numericReceiverId]);
+  }, [userId, numericReceiverId, fetchMessages, checkBlockStatus]);
+  
+  
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     try {
       const res = await fetch(`/api/message/conversation?userId=${userId}&friendId=${numericReceiverId}`, {
         method: 'GET',
@@ -43,9 +45,9 @@ const MessagePage = ({ params }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const checkBlockStatus = async () => {
+  }, [userId, numericReceiverId]);
+  
+  const checkBlockStatus = useCallback(async () => {
     try {
       const res = await fetch('/api/user/check-blocked', {
         method: 'POST',
@@ -60,7 +62,8 @@ const MessagePage = ({ params }) => {
     } catch (error) {
       console.error('Error checking block status:', error);
     }
-  };
+  }, [userId, numericReceiverId]);
+  
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;

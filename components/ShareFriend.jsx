@@ -2,14 +2,17 @@
 
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
+import Image from 'next/image'; // Import the Image component from next/image
 
 export default function ShareFriend({ postId }) {
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
   const { data: session, status } = useSession();
+
   // Fetch the user's friends
   useEffect(() => {
-    const fetchFriends = async () => {
+    if (session?.user?.id) { // Check if session.user.id is available before fetching
+      const fetchFriends = async () => {
         try {
           const res = await fetch('/api/friends', {
             method: 'POST',
@@ -31,8 +34,9 @@ export default function ShareFriend({ postId }) {
         }
       };
 
-    fetchFriends();
-  }, []);
+      fetchFriends();
+    }
+  }, [session?.user?.id]); // Add session.user.id as a dependency to the useEffect
 
   // Handle sharing post with selected friend
   const handleShare = async (friendId) => {
@@ -69,9 +73,11 @@ export default function ShareFriend({ postId }) {
             <div className="space-y-4">
               {friends.map((friend) => (
                 <div key={friend.id} className="flex items-center bg-white p-4 rounded shadow">
-                  <img
-                    src={friend.profilePicture}
+                  <Image
+                    src={friend.profilePicture || '/default-avatar.png'} // Use default image if no profilePicture
                     alt={friend.username}
+                    width={48} // Set width for the image
+                    height={48} // Set height for the image
                     className="w-12 h-12 rounded-full mr-4"
                   />
                   <span className="text-lg">{friend.username}</span>

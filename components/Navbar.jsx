@@ -6,6 +6,7 @@ import { BiSearch, BiMessageDots } from 'react-icons/bi';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image'; // Importing Image from Next.js for optimized images
 
 const Navbar = () => {
   const { data: session } = useSession();
@@ -20,12 +21,6 @@ const Navbar = () => {
   const userProfileRef = useRef(null);
   const dropdownRef = useRef(null); // Reference for the dropdown menu
 
-  useEffect(() => {
-    if (userId) {
-      fetchUserInfo(userId);
-    }
-  }, [userId]);
-
   const fetchUserInfo = async (userId) => {
     try {
       const res = await fetch('/api/user', {
@@ -38,7 +33,7 @@ const Navbar = () => {
 
       const data = await res.json();
       setUserInfo(data);
-      console.log(data)
+      console.log(data);
       if (!data.firstName || !data.lastName) {
         router.push('/profile');
       }
@@ -46,6 +41,12 @@ const Navbar = () => {
       console.error('Error fetching user info:', error);
     }
   };
+
+  useEffect(() => {
+    if (userId) {
+      fetchUserInfo(userId);
+    }
+  }, [userId]); // Dependency on userId to refetch if it changes
 
   const toggleDropdown = () => {
     setIsDropdownOpen((prev) => !prev);
@@ -80,7 +81,7 @@ const Navbar = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, []); // Empty array to only run once when component mounts
 
   const handleLinkClick = () => {
     setIsMobileMenuOpen(false);
@@ -129,9 +130,11 @@ const Navbar = () => {
         {/* User Profile Image */}
         {userInfo && (
           <div className="relative" ref={userProfileRef}>
-            <img
+            <Image
               src={userInfo.profilePicture || '/default-avatar.png'}
               alt="User Profile"
+              width={32} // Set width
+              height={32} // Set height
               className="w-8 h-8 rounded-full cursor-pointer border border-gray-300"
               onClick={toggleDropdown}
             />
@@ -181,9 +184,11 @@ const Navbar = () => {
             </Link>
 
             <div onClick={handleProfileClick} className="flex items-center space-x-1 text-gray-600 hover:text-blue-500 cursor-pointer">
-              <img
+              <Image
                 src={userInfo?.profilePicture || '/default-avatar.png'}
                 alt="User Profile"
+                width={24} // Set width
+                height={24} // Set height
                 className="w-6 h-6 rounded-full"
               />
               <span>Profile</span>

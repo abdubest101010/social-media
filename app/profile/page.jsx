@@ -1,6 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
@@ -227,8 +228,11 @@ export default function ProfileForm() {
         {imagePreview && (
           <div className="text-center">
             <label className="block text-sm font-medium text-gray-700 mb-2">Image Preview</label>
-            <img
+            <Image
               src={imagePreview}
+              unoptimized 
+              width={50}
+              height={50}
               alt="Profile Preview"
               className="mx-auto w-32 h-32 rounded-full object-cover border border-gray-300"
             />

@@ -2,7 +2,7 @@
 
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import Post from '@/components/Post';
 import FetchFriendRequest from '@/components/FetchFriendRequest';
 import AllPosts from '@/components/AllPosts';
@@ -12,13 +12,17 @@ import Friends from '@/components/Friends';
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const userId=session?.user?.id
+  const userId = session?.user?.id;
+
+  // Redirect unauthenticated users to login
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
-  const fetchUserInfo = async () => {
+
+  // Memoized function to fetch user info
+  const fetchUserInfo = useCallback(async () => {
     if (userId) {
       try {
         const response = await fetch('/api/user', {
@@ -40,11 +44,11 @@ export default function Home() {
             profilePicture,
           } = userData;
 
-          // Check if any of the required fields are empty
+          // Check if any required fields are missing
           if (!firstName || !lastName || !livingIn || !wentTo || !worksAt || !bio || !profilePicture) {
-            // Redirect to '/profile' if any of the fields are empty
+            // Redirect to profile setup if any field is empty
             router.push('/profile');
-          } 
+          }
         } else {
           console.error('Failed to fetch user data');
         }
@@ -52,11 +56,12 @@ export default function Home() {
         console.error('Error fetching user data:', error);
       }
     }
-  };
+  }, [userId, router]);
 
+  // Trigger user info fetch on `userId` change
   useEffect(() => {
     fetchUserInfo();
-  }, [userId]);
+  }, [fetchUserInfo]);
 
   if (status === 'loading' || !session) {
     return <p>Loading...</p>;

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
+import Image from 'next/image';
 
 export default function PostForm() {
   const { data: session } = useSession();
@@ -85,9 +86,11 @@ export default function PostForm() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Image Preview:
             </label>
-            <img
+            <Image
               src={imagePreview}
               alt="Preview"
+              width={300}
+              height={150}
               className="max-w-full h-auto rounded-lg border"
             />
           </div>

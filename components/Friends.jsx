@@ -1,7 +1,7 @@
-// src/app/friends/page.js
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function FriendsList() {
   const { data: session, status } = useSession();
@@ -9,7 +9,7 @@ export default function FriendsList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === 'authenticated') {
+    if (status === 'authenticated' && session?.user?.id) {
       const fetchFriends = async () => {
         try {
           const res = await fetch('/api/friends', {
@@ -34,7 +34,7 @@ export default function FriendsList() {
 
       fetchFriends();
     }
-  }, [status]);
+  }, [status, session?.user?.id]); // Add session.user.id as a dependency
 
   if (loading) return <div>Loading...</div>;
 
@@ -45,12 +45,25 @@ export default function FriendsList() {
         <p>No friends found.</p>
       ) : (
         <ul className="space-y-4">
-          {friends.map(friend => (
-            <Link href={`/message/${friend.id}`}><li key={friend.id} className="flex items-center  p-4 rounded shadow">
-              <img src={friend.profilePicture} alt={friend.username} className="w-12 h-12 rounded-full mr-4" />
-              <span className="text-lg">{friend.firstName} {friend.lastName}</span>
-            </li></Link>
-          ))}
+        {friends.map(friend => (
+  <Link key={friend.id} href={`/message/${friend.id}`}>
+    <li className="flex items-center p-4 rounded shadow">
+      {friend.profilePicture ? (
+        <Image 
+          src={friend.profilePicture} 
+          alt={friend.username} 
+          width={35} 
+          height={35} 
+          className="w-12 h-12 rounded-full mr-4" 
+        />
+      ) : (
+        <div className="w-12 h-12 rounded-full bg-gray-300 mr-4"></div> // Placeholder if no image
+      )}
+      <span className="text-lg">{friend.firstName} {friend.lastName}</span>
+    </li>
+  </Link>
+))}
+
         </ul>
       )}
     </div>

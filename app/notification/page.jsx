@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
@@ -9,14 +9,8 @@ const NotificationsPage = () => {
   const { data: session, status } = useSession();
   const userId = session?.user?.id;
 
-  // Fetch notifications from API once the session is loaded
-  useEffect(() => {
-    if (status === 'authenticated' && userId) {
-      fetchNotifications();
-    }
-  }, [status, userId]);
-
-  const fetchNotifications = async () => {
+  // Memoize fetchNotifications to ensure a stable reference
+  const fetchNotifications = useCallback(async () => {
     try {
       const response = await fetch(`/api/notification?userId=${userId}`);
       if (response.ok) {
@@ -30,7 +24,14 @@ const NotificationsPage = () => {
       console.error('Error fetching notifications:', err);
       setError('An error occurred while fetching notifications.');
     }
-  };
+  }, [userId]);
+
+  // Fetch notifications when status and userId are valid
+  useEffect(() => {
+    if (status === 'authenticated' && userId) {
+      fetchNotifications();
+    }
+  }, [status, userId, fetchNotifications]);
 
   const markAsRead = async (id) => {
     try {
@@ -61,10 +62,9 @@ const NotificationsPage = () => {
 
         {notifications.length > 0 ? (
           notifications.map((notif) => {
-            // Determine the dynamic link
             const linkHref = notif.postId
-              ? `/posts/${notif.postId}` // Link to post if postId exists
-              : `/message/${notif.senderId}`; // Otherwise, link to sender's message
+              ? `/posts/${notif.postId}`
+              : `/message/${notif.senderId}`;
 
             return (
               <Link
