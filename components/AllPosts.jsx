@@ -21,14 +21,14 @@ export default function PostsPage({effectiveUserId, id}) {
       try {
         const method = effectiveUserId || id ? 'POST' : 'GET';
         const url = id ? '/api/posts/singlePost' : '/api/posts/getPost';
-    
+  
         const body =
           id && effectiveUserId
             ? { id, effectiveUserId } // If both `id` and `effectiveUserId` are provided
             : id
             ? { id } // If only `id` is provided
             : { effectiveUserId }; // If only `effectiveUserId` is provided
-    
+  
         const options =
           method === 'POST'
             ? {
@@ -37,20 +37,20 @@ export default function PostsPage({effectiveUserId, id}) {
                 body: JSON.stringify(body),
               }
             : {};
-    
+  
         const res = await fetch(url, options);
-    
+  
         if (!res.ok) {
           throw new Error(`Failed to fetch posts: ${res.status}`);
         }
-    
+  
         const data = await res.json();
-    
+  
         // Process posts (sorting, mapping, etc.)
         const sortedPosts = data.sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
-    
+  
         const postsWithStatus = sortedPosts.map((post) => ({
           ...post,
           hasLiked: post.likes?.some((like) => like.userId === effectiveUserId),
@@ -61,7 +61,7 @@ export default function PostsPage({effectiveUserId, id}) {
           showComments: false,
           showLikes: false,
         }));
-    
+  
         setPosts(postsWithStatus);
       } catch (error) {
         console.error('Failed to fetch posts:', error);
@@ -69,13 +69,13 @@ export default function PostsPage({effectiveUserId, id}) {
         setLoading(false);
       }
     };
-    
   
     // Trigger the function if authenticated
     if (status === 'authenticated') {
       fetchPosts();
     }
-  }, [status, effectiveUserId]);
+  }, [status, effectiveUserId, id]); // Include `id` in the dependency array
+  
   
 
   const handleLike = async (postId, hasLiked) => {

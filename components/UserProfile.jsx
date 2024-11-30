@@ -1,6 +1,4 @@
-'use client';
-
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image'; // Import the Image component from Next.js
@@ -11,10 +9,9 @@ export default function UserProfile({ id }) {
   const [loading, setLoading] = useState(true);
   const [friendRequestStatus, setFriendRequestStatus] = useState(null);
   const [isFriend, setIsFriend] = useState(false);
-  const [post, setPost] = useState(null);
   const userId = session?.user?.id?.toString();
 
-  const fetchUserInfo = async (id) => {
+  const fetchUserInfo = useCallback(async (id) => {
     try {
       const res = await fetch('/api/user', {
         method: 'POST',
@@ -29,9 +26,9 @@ export default function UserProfile({ id }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const checkFriendRequestStatus = async (receiverId) => {
+  const checkFriendRequestStatus = useCallback(async (receiverId) => {
     try {
       const res = await fetch('/api/friend-request/check', {
         method: 'POST',
@@ -50,9 +47,9 @@ export default function UserProfile({ id }) {
     } catch (error) {
       console.error('Error checking friend request status:', error);
     }
-  };
+  }, [userId]);
 
-  const checkIfFriends = async (otherUserId) => {
+  const checkIfFriends = useCallback(async (otherUserId) => {
     try {
       const res = await fetch('/api/friend-request/check-friendship', {
         method: 'POST',
@@ -69,7 +66,15 @@ export default function UserProfile({ id }) {
     } catch (error) {
       console.error('Error checking friendship status:', error);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (id) {
+      fetchUserInfo(id);
+      checkFriendRequestStatus(id);
+      checkIfFriends(id);
+    }
+  }, [id, fetchUserInfo, checkFriendRequestStatus, checkIfFriends]);
 
   const sendFriendRequest = async (receiverId) => {
     try {
@@ -92,15 +97,6 @@ export default function UserProfile({ id }) {
       console.error('Failed to send friend request:', error);
     }
   };
-
-  // Fetch user info and check friendship status
-  useEffect(() => {
-    if (id) {
-      fetchUserInfo(id);
-      checkFriendRequestStatus(id);
-      checkIfFriends(id);
-    }
-  }, [id]); // Only include 'id' in the dependency array
 
   if (loading) return <div>Loading...</div>;
   if (!userInfo) return <div>No user information available</div>;

@@ -21,12 +21,13 @@ const Navbar = () => {
   const userProfileRef = useRef(null);
   const dropdownRef = useRef(null); // Reference for the dropdown menu
 
-  const fetchUserInfo = async (userId) => {
+  useEffect(() => {
+  const fetchUserInfo = async () => {
     try {
       const res = await fetch('/api/user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: userId }),
+        body: JSON.stringify({ userId }),
       });
 
       if (!res.ok) throw new Error('Failed to fetch user info');
@@ -42,11 +43,11 @@ const Navbar = () => {
     }
   };
 
-  useEffect(() => {
-    if (userId) {
-      fetchUserInfo(userId);
-    }
-  }, [userId]); // Dependency on userId to refetch if it changes
+  if (userId) {
+    fetchUserInfo();
+  }
+}, [userId, router]); // Include router if used inside fetchUserInfo
+ // Dependency on userId to refetch if it changes
 
   const toggleDropdown = () => {
     setIsDropdownOpen((prev) => !prev);

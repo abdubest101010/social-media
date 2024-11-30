@@ -1,5 +1,5 @@
 import React from 'react'
-import AllPosts from "@/components/Allposts"
+import AllPosts from "@/components/AllPosts"
 function page() {
   return (
     <AllPosts/>
