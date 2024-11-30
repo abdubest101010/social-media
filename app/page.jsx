@@ -88,7 +88,6 @@ export default function Home() {
             <Post />
             <AllPosts />
           </div>
-
           {/* Friend Requests and Friends Section */}
           <div className="col-span-12 md:col-span-4 hidden md:block">
             <div className="p-4 rounded-lg shadow-md mb-6">
