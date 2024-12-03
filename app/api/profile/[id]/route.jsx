@@ -1,34 +1,35 @@
-// pages/api/profile/[id].js
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
-import prisma  from "@/lib/prisma";
+export async function GET(request, { params }) {
+  const { id } = params;
 
-export default async function handler(req, res) {
-  const { id } = req.query;
-
-  if (req.method === "GET") {
-    // Fetch the user's profile
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id: Number(id) },
-        select: {
-          id: true,
-          username: true,
-          firstName: true,
-          lastName: true,
-          livingIn: true,
-          wentTo: true,
-          worksAt: true,
-          bio: true,
-        },
-      });
-
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      res.json(user);
-    } catch (error) {
-      res.status(500).json({ error: "Internal server error" });
+  try {
+    if (!id || isNaN(id)) {
+      return NextResponse.json({ error: "Invalid ID provided" }, { status: 400 });
     }
+
+    const user = await prisma.user.findUnique({
+      where: { id: Number(id) },
+      select: {
+        id: true,
+        username: true,
+        firstName: true,
+        lastName: true,
+        livingIn: true,
+        wentTo: true,
+        worksAt: true,
+        bio: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(user, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
