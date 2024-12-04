@@ -1,7 +1,6 @@
-'use client';
-
+"use client"
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 const MessagePage = ({ params }) => {
   const { id: receiverId } = params;
@@ -17,15 +16,7 @@ const MessagePage = ({ params }) => {
   const userId = session?.user?.id;
   const username = session?.user?.username;
 
-  useEffect(() => {
-    if (userId && numericReceiverId) {
-      fetchMessages();
-      checkBlockStatus();
-    }
-  }, [userId, numericReceiverId, fetchMessages, checkBlockStatus]);
-  
-  
-
+  // Define fetchMessages first
   const fetchMessages = useCallback(async () => {
     try {
       const res = await fetch(`/api/message/conversation?userId=${userId}&friendId=${numericReceiverId}`, {
@@ -46,7 +37,8 @@ const MessagePage = ({ params }) => {
       setLoading(false);
     }
   }, [userId, numericReceiverId]);
-  
+
+  // Define checkBlockStatus next
   const checkBlockStatus = useCallback(async () => {
     try {
       const res = await fetch('/api/user/check-blocked', {
@@ -63,7 +55,14 @@ const MessagePage = ({ params }) => {
       console.error('Error checking block status:', error);
     }
   }, [userId, numericReceiverId]);
-  
+
+  // Then use them in useEffect
+  useEffect(() => {
+    if (userId && numericReceiverId) {
+      fetchMessages();
+      checkBlockStatus();
+    }
+  }, [userId, numericReceiverId, fetchMessages, checkBlockStatus]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
@@ -144,72 +143,72 @@ const MessagePage = ({ params }) => {
 
   return (
     <div className="container mx-auto p-4 max-w-md border rounded-lg shadow-md bg-white">
-      <h2 className="text-xl font-semibold text-center mb-4">Messenger</h2>
+  <h2 className="text-xl font-semibold text-center mb-4">Messenger</h2>
 
-      {/* Block Status Messages */}
-      {blockedBy ? (
-        <p className="text-center text-red-500 mb-2">You are blocked by {userInfo}. You cannot send messages.</p>
+  {/* Block Status Messages */}
+  {blockedBy ? (
+    <p className="text-center text-red-500 mb-2">You are blocked by this user. You cannot send messages.</p>
+  ) : (
+    <div className="flex justify-center mb-2">
+      {isBlocked ? (
+        <button onClick={unblockUser} className="bg-yellow-500 text-white px-4 py-2 rounded">
+          Unblock User
+        </button>
       ) : (
-        <div className="flex justify-center mb-2">
-          {isBlocked ? (
-            <button onClick={unblockUser} className="bg-yellow-500 text-white px-4 py-2 rounded">
-              Unblock User
-            </button>
-          ) : (
-            <button onClick={blockUser} className="bg-red-500 text-white px-4 py-2 rounded">
-              Block User
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Messages */}
-      <div className="messages-container mb-4 p-2 bg-gray-100 rounded-lg h-96 overflow-y-scroll">
-        {messages.length > 0 ? (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={`message mb-2 flex ${
-                message.sender.username === username ? 'justify-end' : 'justify-start'
-              }`}
-            >
-              <div
-                className={`rounded-lg p-3 max-w-xs ${
-                  message.sender.username === username
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-300 text-gray-900'
-                }`}
-              >
-                <p className="text-sm">{message.content}</p>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className="text-center text-gray-500">No messages found.</p>
-        )}
-      </div>
-
-      {/* Error Message */}
-      {errorMessage && <div className="text-red-500 mb-4 text-center">{errorMessage}</div>}
-
-      {/* Send Message */}
-      {!blockedBy && !isBlocked && (
-        <div className="send-message-container flex items-center">
-          <textarea
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="w-full border border-gray-300 rounded-l-lg p-2 resize-none"
-          />
-          <button
-            onClick={handleSendMessage}
-            className="bg-blue-500 text-white px-4 py-2 rounded-r-lg"
-          >
-            Send
-          </button>
-        </div>
+        <button onClick={blockUser} className="bg-red-500 text-white px-4 py-2 rounded">
+          Block User
+        </button>
       )}
     </div>
+  )}
+
+  {/* Messages */}
+  <div className="messages-container mb-4 p-2 bg-gray-100 rounded-lg h-96 overflow-y-scroll">
+    {messages.length > 0 ? (
+      messages.map((message) => (
+        <div
+          key={message.id}
+          className={`flex mb-2 ${
+            message.senderId === userId ? 'justify-end' : 'justify-start'
+          }`}
+        >
+          <div
+            className={`rounded-xl px-4 py-2 max-w-xs shadow ${
+              message.senderId === userId
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-300 text-gray-900'
+            }`}
+          >
+            <p className="text-sm">{message.content}</p>
+          </div>
+        </div>
+      ))
+    ) : (
+      <p className="text-center text-gray-500">No messages found.</p>
+    )}
+  </div>
+
+  {/* Error Message */}
+  {errorMessage && <div className="text-red-500 mb-4 text-center">{errorMessage}</div>}
+
+  {/* Send Message */}
+  {!blockedBy && !isBlocked && (
+    <div className="send-message-container flex items-center">
+      <textarea
+        value={newMessage}
+        onChange={(e) => setNewMessage(e.target.value)}
+        placeholder="Type a message..."
+        className="w-full border border-gray-300 rounded-l-lg p-2 resize-none"
+      />
+      <button
+        onClick={handleSendMessage}
+        className="bg-blue-500 text-white px-4 py-2 rounded-r-lg"
+      >
+        Send
+      </button>
+    </div>
+  )}
+</div>
   );
 };
 
