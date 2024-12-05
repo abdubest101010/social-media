@@ -25,28 +25,28 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoadingLogin(true);
-    setError('');
-
+    setError("");
+  
     try {
-      const result = await signIn('credentials', {
+      const result = await signIn("credentials", {
         redirect: false,
         email,
         password,
       });
-
+  
       setLoadingLogin(false);
-
+  
       if (result?.ok) {
-        // Ensure the page re-renders after login
-        router.replace('/');
+        router.replace("/"); // Redirect on successful login
       } else {
-        setError(result?.error || 'Invalid email or password');
+        setError(result?.error || "Invalid email or password");
       }
     } catch (error) {
       setLoadingLogin(false);
-      setError('An error occurred. Please try again.');
+      setError("An error occurred. Please try again.");
     }
   };
+  
 
   const handleGoogleSignIn = async () => {
     setLoadingGoogle(true);

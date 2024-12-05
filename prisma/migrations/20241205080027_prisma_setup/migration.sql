@@ -11,6 +11,11 @@ CREATE TABLE "User" (
     "worksAt" TEXT,
     "bio" TEXT,
     "profilePicture" TEXT,
+    "verified" BOOLEAN NOT NULL DEFAULT false,
+    "verificationCode" TEXT,
+    "verifiedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -202,6 +207,9 @@ CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_verificationCode_key" ON "User"("verificationCode");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "PasswordReset_email_key" ON "PasswordReset"("email");

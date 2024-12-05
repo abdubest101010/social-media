@@ -1,8 +1,3 @@
-import prisma from "@/lib/prisma"
-import bcrypt from "bcryptjs";
-
-
-
 export async function POST(req) {
   const { email, password } = await req.json();
 
@@ -15,6 +10,14 @@ export async function POST(req) {
     return new Response(JSON.stringify({ error: "No user found with this email." }), {
       status: 400,
     });
+  }
+
+  // Check if the user is verified
+  if (!user.verified) {
+    return new Response(
+      JSON.stringify({ error: "Your account is not verified. Please verify your email." }),
+      { status: 400 }
+    );
   }
 
   // Check if the user is a Google user (no password)
@@ -36,7 +39,10 @@ export async function POST(req) {
 
   // Return user data if authentication is successful
   return new Response(
-    JSON.stringify({ message: "Login successful", user: { id: user.id, email: user.email, username: user.username } }),
+    JSON.stringify({
+      message: "Login successful",
+      user: { id: user.id, email: user.email, username: user.username },
+    }),
     { status: 200 }
   );
 }

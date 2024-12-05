@@ -11,13 +11,13 @@ model User {
   id               Int             @id @default(autoincrement())
   username         String          @unique
   email            String          @unique
-  password         String?         // Optional password
-  firstName        String?         // First name of the user
-  lastName         String?         // Last name of the user
-  livingIn         String?         // Where the user lives
-  wentTo           String?         // Where the user went to school
-  worksAt          String?         // Where the user works
-  bio              String?         // Additional info about the user
+  password         String?
+  firstName        String?
+  lastName         String?
+  livingIn         String?
+  wentTo           String?
+  worksAt          String?
+  bio              String?
   profilePicture   String?
   posts            Post[]          @relation("UserPosts")
   comments         Comment[]       @relation("UserComments")
@@ -39,7 +39,15 @@ model User {
   authenticators   Authenticator[]
   notifications    Notification[]  @relation("UserNotifications")
   sentNotifications Notification[] @relation("SenderNotifications")
+
+  // Email verification fields
+  verified         Boolean         @default(false)
+  verificationCode String?         @unique // Make verificationCode unique
+  verifiedAt       DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 }
+
 
 model Post {
   id            Int             @id @default(autoincrement())

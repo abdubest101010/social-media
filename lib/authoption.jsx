@@ -90,29 +90,34 @@ export const authOptions = {
       },
       async authorize(credentials) {
         const { email, password } = credentials;
-
+    
         // Find user by email
         const user = await prisma.user.findUnique({
           where: { email },
         });
-
+    
         if (!user) {
           throw new Error("No user found with this email.");
         }
-
-        // Check if the user is a Google user
+    
+        // Check if the user is verified
+        if (!user.verified) {
+          throw new Error("Your account is not verified. Please verify your email.");
+        }
+    
+        // Check if the user is a Google user (no password)
         if (!user.password) {
           throw new Error(
             "This email is linked with a Google account. Please log in with Google."
           );
         }
-
+    
         // Validate password
         const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) {
           throw new Error("Incorrect password.");
         }
-
+    
         // Return user object on success
         return {
           id: user.id,
@@ -121,6 +126,7 @@ export const authOptions = {
         };
       },
     }),
+    
   ],
   session: {
     strategy: "jwt",

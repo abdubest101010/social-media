@@ -1,6 +1,5 @@
 "use client";
 import { useRef, useState } from "react";
-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ClipLoader from "react-spinners/ClipLoader";
@@ -13,50 +12,52 @@ const Register = () => {
   const router = useRouter();
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [loading, setLoading] = useState(false);  // Add state for loading
+  const [loading, setLoading] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const email = emailRef.current.value;
     const password = passwordRef.current.value;
     const username = usernameRef.current.value;
 
-    setLoading(true);  // Set loading to true when form is submitted
+    setLoading(true);
 
     try {
-     
       const response = await fetch('/api/register', {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(email,password,username),
+        body: JSON.stringify({ email, password, username }),
       });
 
-      if (response.status >= 200 && response.status < 300) {
-        setSuccess("Registration successful!");
+      const result = await response.json();
+      if (response.status === 200) {
+        setSuccess(
+          "Registration successful! Please check your email to verify your account."
+        );
         setError(null);
-        router.push("/login");
       } else {
-        setError("Failed to register.");
+        setError(result.message || "Failed to register.");
         setSuccess(null);
       }
     } catch (error) {
-      console.error(error);
-      let message = error?.response?.data?.message || "Registration failed.";
-      setError(message);
+      console.error("Error in handleSubmit:", error);
+      setError("Registration failed. Please try again.");
       setSuccess(null);
     } finally {
-      setLoading(false);  // Reset loading state when the request is completed
+      setLoading(false);
     }
   };
+
   const handleGoogleSignIn = async () => {
     setLoadingGoogle(true);
     const result = await signIn('google', {
-      callbackUrl: '/'  // Redirect to homepage after successful Google login
+      callbackUrl: '/',
     });
     if (result?.ok) {
-      router.push('/');  // You can also manually redirect using the router here
+      router.push('/');
     }
     setLoadingGoogle(false);
   };
@@ -67,7 +68,7 @@ const Register = () => {
         <h1 className="text-2xl font-bold mb-4">Register</h1>
         {success && <p className="text-green-500 mb-4">{success}</p>}
         {error && <p className="text-red-500 mb-4">{String(error)}</p>}
-        
+
         <div className="mb-4">
           <label htmlFor="username" className="block text-gray-700 mb-2">Username</label>
           <input
@@ -79,7 +80,7 @@ const Register = () => {
             required
           />
         </div>
-        
+
         <div className="mb-4">
           <label htmlFor="email" className="block text-gray-700 mb-2">Email</label>
           <input
@@ -91,7 +92,7 @@ const Register = () => {
             required
           />
         </div>
-        
+
         <div className="mb-4">
           <label htmlFor="password" className="block text-gray-700 mb-2">Password</label>
           <input
@@ -103,28 +104,32 @@ const Register = () => {
             required
           />
         </div>
-        
+
         <button
           type="submit"
-          className={`w-full text-white py-2 rounded mb-2 ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500'}`}
+          className={`w-full text-white py-2 rounded mb-2 ${
+            loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500'
+          }`}
           disabled={loading}
         >
           {loading ? <ClipLoader color="#ffffff" size={20} /> : 'Register'}
         </button>
         <p className="text-center text-gray-600">or</p>
-          <button
-            type="button"
-            onClick={handleGoogleSignIn}
-            className={`w-full text-white py-2 rounded mt-2 ${loadingGoogle ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500'}`}
-            disabled={loadingGoogle}
-          >
-            {loadingGoogle ? <ClipLoader color="#ffffff" size={20} /> : 'Sign up with Google'}
-          </button>
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          className={`w-full text-white py-2 rounded mt-2 ${
+            loadingGoogle ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500'
+          }`}
+          disabled={loadingGoogle}
+        >
+          {loadingGoogle ? <ClipLoader color="#ffffff" size={20} /> : 'Sign up with Google'}
+        </button>
       </form>
 
       <div className="mt-4">
         <p>
-          If you already have an account,{" "}
+          If you already have an account,{' '}
           <Link href="/login" className="text-blue-500">Login</Link>
         </p>
       </div>
