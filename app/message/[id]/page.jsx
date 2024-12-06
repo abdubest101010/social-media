@@ -164,29 +164,33 @@ const MessagePage = ({ params }) => {
 
   {/* Messages */}
   <div className="messages-container mb-4 p-2 bg-gray-100 rounded-lg h-96 overflow-y-scroll">
-    {messages.length > 0 ? (
-      messages.map((message) => (
+  {messages.length > 0 ? (
+    messages.map((message) => (
+      <div
+        key={message.id}
+        className={`flex mb-2 ${
+          message.senderId === userId ? 'justify-end' : 'justify-start'
+        }`}
+      >
         <div
-          key={message.id}
-          className={`flex mb-2 ${
-            message.senderId === userId ? 'justify-end' : 'justify-start'
+          className={`rounded-xl px-4 py-2 max-w-xs shadow ${
+            message.senderId === userId
+              ? 'bg-blue-500 text-white self-end'
+              : 'bg-gray-300 text-gray-900 self-start'
           }`}
+          style={{
+            alignSelf: message.senderId === userId ? 'flex-end' : 'flex-start',
+          }}
         >
-          <div
-            className={`rounded-xl px-4 py-2 max-w-xs shadow ${
-              message.senderId === userId
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-300 text-gray-900'
-            }`}
-          >
-            <p className="text-sm">{message.content}</p>
-          </div>
+          <p className="text-sm">{message.content}</p>
         </div>
-      ))
-    ) : (
-      <p className="text-center text-gray-500">No messages found.</p>
-    )}
-  </div>
+      </div>
+    ))
+  ) : (
+    <p className="text-center text-gray-500">No messages found.</p>
+  )}
+</div>
+
 
   {/* Error Message */}
   {errorMessage && <div className="text-red-500 mb-4 text-center">{errorMessage}</div>}
@@ -209,12 +213,7 @@ const MessagePage = ({ params }) => {
     </div>
   )}
 </div>
-<<<<<<< HEAD
 
-
-
-=======
->>>>>>> 024c5b1db34b5074fda983eaa89c0fcdb02f541b
   );
 };
 
