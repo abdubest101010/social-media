@@ -66,12 +66,18 @@ const MessagePage = ({ params }) => {
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
-
-    if (blockedBy) {
-      setErrorMessage('You cannot send messages to this user as you are blocked.');
-      return;
-    }
-
+  
+    // Temporarily add the message to the list as "sending"
+    const tempMessage = {
+      id: Date.now(), // Temporary ID until confirmed by the server
+      content: newMessage,
+      senderId: userId,
+      isSending: true, // Temporary flag for styling
+    };
+  
+    setMessages((prevMessages) => [...prevMessages, tempMessage]);
+    setNewMessage(''); // Clear the input field immediately
+  
     try {
       const res = await fetch('/api/message/send', {
         method: 'POST',
@@ -82,22 +88,32 @@ const MessagePage = ({ params }) => {
           content: newMessage,
         }),
       });
-
+  
       const data = await res.json();
       if (res.ok) {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { id: data.message.id, content: data.message.content, sender: { username: username || 'You' } },
-        ]);
-        setNewMessage('');
+        // Replace the temporary message with the server-confirmed message
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.id === tempMessage.id
+              ? { ...msg, id: data.message.id, isSending: false }
+              : msg
+          )
+        );
       } else {
         throw new Error(data.error || 'Failed to send message');
       }
     } catch (error) {
       console.error('Error sending message:', error.message);
+  
+      // Remove the temporary message on error
+      setMessages((prevMessages) =>
+        prevMessages.filter((msg) => msg.id !== tempMessage.id)
+      );
+  
       setErrorMessage(`An error occurred while sending the message: ${error.message}`);
     }
   };
+  
 
   const blockUser = async () => {
     try {
@@ -175,12 +191,11 @@ const MessagePage = ({ params }) => {
         <div
           className={`rounded-xl px-4 py-2 max-w-xs shadow ${
             message.senderId === userId
-              ? 'bg-blue-500 text-white self-end'
-              : 'bg-gray-300 text-gray-900 self-start'
+              ? message.isSending
+                ? 'bg-blue-300 text-white opacity-70' // Style for sending message
+                : 'bg-blue-500 text-white'
+              : 'bg-gray-300 text-gray-900'
           }`}
-          style={{
-            alignSelf: message.senderId === userId ? 'flex-end' : 'flex-start',
-          }}
         >
           <p className="text-sm">{message.content}</p>
         </div>
@@ -190,6 +205,7 @@ const MessagePage = ({ params }) => {
     <p className="text-center text-gray-500">No messages found.</p>
   )}
 </div>
+
 
 
   {/* Error Message */}
