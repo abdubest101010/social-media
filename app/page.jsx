@@ -10,7 +10,7 @@ import Stories from '@/components/Stories';
 import Friends from '@/components/Friends';
 
 export default function Home() {
-  const { data: session, status } = useSession();
+ const { data: session, status } = useSession();
   const router = useRouter();
   const userId = session?.user?.id;
 
@@ -31,9 +31,9 @@ export default function Home() {
           body: JSON.stringify({ userId }),
         });
 
-        const userData = await response.json();
-
         if (response.ok) {
+          const userData = await response.json();
+
           const {
             firstName,
             lastName,
@@ -44,13 +44,12 @@ export default function Home() {
             profilePicture,
           } = userData;
 
-          // Check if any required fields are missing
+          // Redirect to profile setup if any required fields are missing
           if (!firstName || !lastName || !livingIn || !wentTo || !worksAt || !bio || !profilePicture) {
-            // Redirect to profile setup if any field is empty
             router.push('/profile');
           }
         } else {
-          console.error('Failed to fetch user data');
+          console.error('Failed to fetch user data:', response.statusText);
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -60,17 +59,19 @@ export default function Home() {
 
   // Trigger user info fetch on `userId` change
   useEffect(() => {
-    fetchUserInfo();
-  }, [fetchUserInfo]);
+    if (status === 'authenticated' && userId) {
+      fetchUserInfo();
+    }
+  }, [status, userId, fetchUserInfo]);
 
-  if (status === 'loading' || !session) {
+  // Handle loading and unauthenticated states
+  if (status === 'loading') {
     return <p>Loading...</p>;
   }
 
-  if (!session) {
-    return null;
+  if (status === 'unauthenticated') {
+    return null; // Redirect is handled in `useEffect`
   }
-
   return (
     <main className="min-h-screen bg-gray-100">
       <div className="max-w-full bg-gradient-to-r from-teal-400 via-blue-300 to-blue-500 p-8 rounded-lg shadow-lg">
