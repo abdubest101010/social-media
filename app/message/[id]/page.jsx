@@ -66,12 +66,18 @@ const MessagePage = ({ params }) => {
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
-
-    if (blockedBy) {
-      setErrorMessage('You cannot send messages to this user as you are blocked.');
-      return;
-    }
-
+  
+    // Temporarily add the message to the list as "sending"
+    const tempMessage = {
+      id: Date.now(), // Temporary ID until confirmed by the server
+      content: newMessage,
+      senderId: userId,
+      isSending: true, // Temporary flag for styling
+    };
+  
+    setMessages((prevMessages) => [...prevMessages, tempMessage]);
+    setNewMessage(''); // Clear the input field immediately
+  
     try {
       const res = await fetch('/api/message/send', {
         method: 'POST',
@@ -82,22 +88,32 @@ const MessagePage = ({ params }) => {
           content: newMessage,
         }),
       });
-
+  
       const data = await res.json();
       if (res.ok) {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { id: data.message.id, content: data.message.content, sender: { username: username || 'You' } },
-        ]);
-        setNewMessage('');
+        // Replace the temporary message with the server-confirmed message
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.id === tempMessage.id
+              ? { ...msg, id: data.message.id, isSending: false }
+              : msg
+          )
+        );
       } else {
         throw new Error(data.error || 'Failed to send message');
       }
     } catch (error) {
       console.error('Error sending message:', error.message);
+  
+      // Remove the temporary message on error
+      setMessages((prevMessages) =>
+        prevMessages.filter((msg) => msg.id !== tempMessage.id)
+      );
+  
       setErrorMessage(`An error occurred while sending the message: ${error.message}`);
     }
   };
+  
 
   const blockUser = async () => {
     try {
@@ -164,29 +180,33 @@ const MessagePage = ({ params }) => {
 
   {/* Messages */}
   <div className="messages-container mb-4 p-2 bg-gray-100 rounded-lg h-96 overflow-y-scroll">
-    {messages.length > 0 ? (
-      messages.map((message) => (
+  {messages.length > 0 ? (
+    messages.map((message) => (
+      <div
+        key={message.id}
+        className={`flex mb-2 ${
+          message.senderId === userId ? 'justify-end' : 'justify-start'
+        }`}
+      >
         <div
-          key={message.id}
-          className={`flex mb-2 ${
-            message.senderId === userId ? 'justify-end' : 'justify-start'
+          className={`rounded-xl px-4 py-2 max-w-xs shadow ${
+            message.senderId === userId
+              ? message.isSending
+                ? 'bg-blue-300 text-white opacity-70' // Style for sending message
+                : 'bg-blue-500 text-white'
+              : 'bg-gray-300 text-gray-900'
           }`}
         >
-          <div
-            className={`rounded-xl px-4 py-2 max-w-xs shadow ${
-              message.senderId === userId
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-300 text-gray-900'
-            }`}
-          >
-            <p className="text-sm">{message.content}</p>
-          </div>
+          <p className="text-sm">{message.content}</p>
         </div>
-      ))
-    ) : (
-      <p className="text-center text-gray-500">No messages found.</p>
-    )}
-  </div>
+      </div>
+    ))
+  ) : (
+    <p className="text-center text-gray-500">No messages found.</p>
+  )}
+</div>
+
+
 
   {/* Error Message */}
   {errorMessage && <div className="text-red-500 mb-4 text-center">{errorMessage}</div>}
@@ -209,12 +229,7 @@ const MessagePage = ({ params }) => {
     </div>
   )}
 </div>
-<<<<<<< HEAD
 
-
-
-=======
->>>>>>> 024c5b1db34b5074fda983eaa89c0fcdb02f541b
   );
 };
 
