@@ -63,6 +63,7 @@ export default function PostsPage({effectiveUserId, id}) {
         }));
   
         setPosts(postsWithStatus);
+        console.log(posts)
       } catch (error) {
         console.error('Failed to fetch posts:', error);
       } finally {
