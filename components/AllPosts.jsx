@@ -208,18 +208,20 @@ export default function PostsPage({effectiveUserId, id}) {
 
       {/* Post Content */}
       <Link href={`/posts/${post.id}`} className="block mb-4">
-        {post.imageUrl && (
-          <div className="relative w-full mx-auto mb-4">
-            <Image
-  src={post.imageUrl || '/default-placeholder.png'} // Provide a placeholder
-  alt="Post image"
-  width={1200}
-  height={800}
-  className="object-cover w-full h-auto rounded-lg"
-/>
+      {post.imageUrl ? (
+  <div className="relative w-full mx-auto mb-4">
+    <Image
+      src={post.imageUrl}
+      alt="Post image"
+      width={1200}
+      height={800}
+      className="object-cover w-full h-auto rounded-lg"
+    />
+  </div>
+) : (
+  "" // Fallback UI if no imageUrl
+)}
 
-          </div>
-        )}
         <h2 className="text-lg font-medium text-gray-800 mb-2">{post.content}</h2>
       </Link>
 
