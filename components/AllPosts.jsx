@@ -208,20 +208,18 @@ export default function PostsPage({effectiveUserId, id}) {
 
       {/* Post Content */}
       <Link href={`/posts/${post.id}`} className="block mb-4">
-      {post.imageUrl ? (
-  <div className="relative w-full mx-auto mb-4">
-    <Image
-      src={post.imageUrl}
-      alt="Post image"
-      width={1200}
-      height={800}
-      className="object-cover w-full h-auto rounded-lg"
-    />
-  </div>
-) : (
-  "" // Fallback UI if no imageUrl
-)}
-
+        {post.imageUrl && (
+          <div className="relative w-full mx-auto mb-4">
+            <Image
+              src={post.imageUrl}
+              alt="Post image"
+              
+              width={1200} // You can adjust this based on your layout
+              height={800} // Adjust the height to maintain proper aspect ratio
+              className="object-cover w-full h-auto rounded-lg"
+            />
+          </div>
+        )}
         <h2 className="text-lg font-medium text-gray-800 mb-2">{post.content}</h2>
       </Link>
 
