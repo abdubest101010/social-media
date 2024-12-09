@@ -84,7 +84,7 @@ export default function ActiveStories() {
           <div key={story.id}>
             <div className="story-card relative w-40 h-56 rounded-lg overflow-hidden border-2 border-blue-500 bg-white shadow-lg">
               <Image
-                src={story.imageUrl}
+                src={story.imageUrl || ""}
                 alt={story.content}
                 width={160}
                 height={224}
