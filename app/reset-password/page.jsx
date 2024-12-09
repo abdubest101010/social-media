@@ -1,6 +1,6 @@
-'use client'; // Ensure this is at the top of your component
+'use client'; // Ensure the page is treated as a client component
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ClipLoader from 'react-spinners/ClipLoader';
 
@@ -14,31 +14,33 @@ export default function ResetPassword() {
   const token = searchParams.get('token');
   const router = useRouter();
 
-  useEffect(() => {
-    // Handle any side-effects, like updating the page title, etc.
-  }, [token]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
     setLoading(true);
 
-    const response = await fetch('/api/reset-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, newPassword }),
-    });
+    try {
+      const response = await fetch('/api/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, newPassword }),
+      });
 
-    const data = await response.json();
-    setLoading(false);
+      const data = await response.json();
+      setLoading(false);
 
-    if (response.ok) {
-      setMessage({ text: data.message, type: 'success' });
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
-    } else {
-      setMessage({ text: data.error, type: 'error' });
+      if (response.ok) {
+        setMessage({ text: data.message, type: 'success' });
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
+      } else {
+        setMessage({ text: data.error, type: 'error' });
+      }
+    } catch (error) {
+      console.error('Error updating password:', error);
+      setLoading(false);
+      setMessage({ text: 'An error occurred. Please try again.', type: 'error' });
     }
   };
 
