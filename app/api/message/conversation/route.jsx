@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 
 export async function GET(req) {
   try {
-    // Use URLSearchParams to get query parameters
-    const { searchParams } = new URL(req.url);
+    // Use req.nextUrl to get query parameters (recommended for dynamic routes in Next.js)
+    const { searchParams } = req.nextUrl;  // This is the correct way to handle query parameters
     const userId = searchParams.get('userId');
     const friendId = searchParams.get('friendId');
 

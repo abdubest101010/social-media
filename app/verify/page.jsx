@@ -1,4 +1,5 @@
-"use client";
+'use client'; // This makes sure that the component is treated as client-side
+
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
@@ -43,7 +44,7 @@ const Verify = () => {
       <div className="bg-white p-8 rounded shadow-md w-80">
         <h1 className="text-2xl font-bold mb-4">Email Verification</h1>
         {message && <p className="text-green-500">{message}</p>}
-      
+        {error && <p className="text-red-500">{error}</p>}
       </div>
     </div>
   );

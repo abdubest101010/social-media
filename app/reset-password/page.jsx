@@ -1,5 +1,6 @@
-'use client';
-import { useState } from 'react';
+'use client'; // Ensure this is at the top of your component
+
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ClipLoader from 'react-spinners/ClipLoader';
 
@@ -8,9 +9,14 @@ export default function ResetPassword() {
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const router = useRouter();
+
+  useEffect(() => {
+    // Handle any side-effects, like updating the page title, etc.
+  }, [token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,10 +59,7 @@ export default function ResetPassword() {
           </p>
         )}
         <div className="relative">
-          <label
-            htmlFor="newPassword"
-            className="block text-gray-700 mb-2"
-          >
+          <label htmlFor="newPassword" className="block text-gray-700 mb-2">
             New Password
           </label>
           <input
