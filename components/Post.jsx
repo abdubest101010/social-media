@@ -25,13 +25,13 @@ export default function PostForm() {
 
     const reader = new FileReader();
     reader.onload = async () => {
-      const base64Image = reader.result;
+      const base64Image = reader.result; // Convert to Base64 string
 
       try {
         const response = await axios.post('/api/posts', {
           id: session?.user?.id,
           content,
-          imageUrl: base64Image,
+          imageUrl: base64Image,  // Send Base64 image to backend
         });
 
         if (response.status === 201) {
@@ -46,7 +46,7 @@ export default function PostForm() {
       }
     };
 
-    reader.readAsDataURL(image);
+    reader.readAsDataURL(image);  // Read the file as Base64
   };
 
   const handleImageChange = (e) => {
@@ -64,7 +64,7 @@ export default function PostForm() {
   };
 
   return (
-    <div className="post-form  p-4 rounded-lg mb-4">
+    <div className="post-form p-4 rounded-lg mb-4">
       <h2 className="text-xl font-bold mb-4">Create a New Post</h2>
       <form onSubmit={handleSubmit}>
         <textarea
