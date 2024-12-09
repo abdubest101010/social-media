@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import prisma from '@/lib/prisma';
+import prisma from '@/lib/prisma'; // Import Prisma client
 
 // Function to save Base64 image to a file
 const saveBase64Image = (base64Data, filePath) => {
+  const base64Image = base64Data.split(';base64,').pop();
   return new Promise((resolve, reject) => {
-    const base64Image = base64Data.split(';base64,').pop();
     fs.writeFile(filePath, base64Image, { encoding: 'base64' }, (err) => {
       if (err) {
-        reject('Error saving the image:', err);
+        reject('Error saving the image');
       } else {
-        resolve();
+        resolve('Image saved successfully');
       }
     });
   });
@@ -34,13 +34,10 @@ export async function POST(req) {
     if (imageUrl) {
       const fileName = `${Date.now()}-post-image.jpg`; // Unique file name
       const filePath = path.join(process.cwd(), 'public', 'uploads', fileName);
-      try {
-        await saveBase64Image(imageUrl, filePath); // Save the Base64 image
-        imageUrlPath = `/uploads/${fileName}`;
-      } catch (error) {
-        console.error('Error saving image:', error);
-        return NextResponse.json({ error: 'Error saving image' }, { status: 500 });
-      }
+      
+      // Save the image and wait for the result
+      await saveBase64Image(imageUrl, filePath);
+      imageUrlPath = `/uploads/${fileName}`;
     }
 
     // Create a new post in the Prisma database
