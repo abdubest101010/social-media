@@ -10,7 +10,7 @@ import Stories from '@/components/Stories';
 import Friends from '@/components/Friends';
 
 export default function Home() {
-  const { data: session, status } = useSession();
+ const { data: session, status } = useSession();
   const router = useRouter();
   const userId = session?.user?.id;
 
@@ -72,7 +72,6 @@ export default function Home() {
   if (status === 'unauthenticated') {
     return null; // Redirect is handled in `useEffect`
   }
-
   return (
     <main className="min-h-screen bg-gray-100">
       <div className="max-w-full bg-gradient-to-r from-teal-400 via-blue-300 to-blue-500 p-8 rounded-lg shadow-lg">
