@@ -1,7 +1,7 @@
-'use client'; // This makes sure that the component is treated as client-side
+'use client'; // Ensure that this component is treated as client-side
 
-import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 const Verify = () => {
   const [message, setMessage] = useState(null);
@@ -11,28 +11,28 @@ const Verify = () => {
 
   useEffect(() => {
     const verifyUser = async () => {
-      const code = searchParams.get("code");
-      console.log("Code received in Verify component:", code);
+      const code = searchParams.get('code');
+      console.log('Code received in Verify component:', code);
 
       if (!code) {
-        setError("Invalid verification link. Code is missing.");
+        setError('Invalid verification link. Code is missing.');
         return;
       }
 
       try {
         const response = await fetch(`/api/verify?code=${code}`);
         const result = await response.json();
-        console.log("API response:", result);
+        console.log('API response:', result);
 
         if (response.status === 200) {
-          setMessage("Email verified successfully! Redirecting...");
-          setTimeout(() => router.push("/login"), 3000);
+          setMessage('Email verified successfully! Redirecting...');
+          setTimeout(() => router.push('/login'), 3000);
         } else {
-          setError(result.message || "Failed to verify email.");
+          setError(result.message || 'Failed to verify email.');
         }
       } catch (err) {
-        console.error("Error during verification fetch:", err);
-        setError("Something went wrong. Please try again.");
+        console.error('Error during verification fetch:', err);
+        setError('Something went wrong. Please try again.');
       }
     };
 
@@ -50,4 +50,11 @@ const Verify = () => {
   );
 };
 
-export default Verify;
+// Wrapping the component in Suspense Boundary
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Verify />
+    </Suspense>
+  );
+}

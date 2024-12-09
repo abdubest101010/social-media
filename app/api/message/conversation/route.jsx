@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 
 export async function GET(req) {
   try {
-    // Use req.nextUrl to get query parameters (recommended for dynamic routes in Next.js)
-    const { searchParams } = req.nextUrl;  // This is the correct way to handle query parameters
+    // Use req.nextUrl to get query parameters (the correct dynamic server-side approach)
+    const { searchParams } = req.nextUrl;  // This is the correct way to handle query parameters in dynamic routes
     const userId = searchParams.get('userId');
     const friendId = searchParams.get('friendId');
 
