@@ -1,10 +1,12 @@
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
+// Ensure the route is always treated as dynamic
+export const dynamic = 'force-dynamic';
+
 export async function GET(req) {
   try {
-    // Use req.nextUrl to get query parameters (the correct dynamic server-side approach)
-    const { searchParams } = req.nextUrl;  // This is the correct way to handle query parameters in dynamic routes
+    const { searchParams } = req.nextUrl; // Retrieve query parameters dynamically
     const userId = searchParams.get('userId');
     const friendId = searchParams.get('friendId');
 
@@ -12,12 +14,12 @@ export async function GET(req) {
       return NextResponse.json({ error: 'Missing query parameters' }, { status: 400 });
     }
 
-    // Check if the friendship exists before retrieving messages
+    // Validate the friendship
     const friendship = await prisma.friend.findFirst({
       where: {
         OR: [
-          { user1Id: parseInt(userId), user2Id: parseInt(friendId) },
-          { user1Id: parseInt(friendId), user2Id: parseInt(userId) },
+          { user1Id: parseInt(userId, 10), user2Id: parseInt(friendId, 10) },
+          { user1Id: parseInt(friendId, 10), user2Id: parseInt(userId, 10) },
         ],
       },
     });
@@ -26,18 +28,18 @@ export async function GET(req) {
       return NextResponse.json({ error: 'You are not friends with this user' }, { status: 403 });
     }
 
-    // Fetch the messages and include the sender's username
+    // Fetch messages between the two users
     const messages = await prisma.message.findMany({
       where: {
         OR: [
-          { senderId: parseInt(userId), receiverId: parseInt(friendId) },
-          { senderId: parseInt(friendId), receiverId: parseInt(userId) },
+          { senderId: parseInt(userId, 10), receiverId: parseInt(friendId, 10) },
+          { senderId: parseInt(friendId, 10), receiverId: parseInt(userId, 10) },
         ],
       },
       orderBy: { createdAt: 'asc' },
       include: {
         sender: {
-          select: { username: true }, // Include the sender's username
+          select: { username: true }, // Include sender's username
         },
       },
     });
