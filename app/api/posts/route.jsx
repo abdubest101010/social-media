@@ -7,7 +7,7 @@ import prisma from '@/lib/prisma'; // Import Prisma client
 // Function to save Base64 image to a file
 const saveBase64Image = (base64Data, filePath) => {
   const base64Image = base64Data.split(';base64,').pop();
-<<<<<<< HEAD
+
   fs.writeFile(filePath, base64Image, { encoding: 'base64' }, (err) => {
     if (err) {
       console.error('Error saving the image:', err);
@@ -15,31 +15,30 @@ const saveBase64Image = (base64Data, filePath) => {
       console.log('Image saved successfully');
     }
   });
-=======
+
   fs.writeFileSync(filePath, base64Image, { encoding: 'base64' }); // Sync for simplicity here
->>>>>>> c9accc21b96e65e3562fa802dda2893abdd6427d
+
 };
 
 // POST method to handle post creation with Base64 image
 export async function POST(req) {
   try {
-<<<<<<< HEAD
+
     const body = await req.json(); // Parse the incoming request body
     const { id, content, imageUrl } = body;
 
     // Validate ID presence
-=======
     // Destructure the incoming request body
-    const { id, content, imageUrl } = await req.json();
+    
 
     // Validate required fields
->>>>>>> c9accc21b96e65e3562fa802dda2893abdd6427d
+
     if (!id) {
       console.error('ID is missing in the request.');
       return NextResponse.json({ error: 'ID is required' }, { status: 400 });
     }
 
-<<<<<<< HEAD
+
     // Handle image saving if present
     let imageUrlPath = null;
     if (imageUrl) {
@@ -59,27 +58,12 @@ export async function POST(req) {
     });
 
     console.log('Create post details:', createPost);
-=======
-    // Handle image upload (if provided)
-    let imageUrlPath = null;
-    if (imageUrl) {
-      const fileName = `${Date.now()}-post-image.jpg`; // Unique file name using timestamp
-      const filePath = path.join(process.cwd(), 'public', 'uploads', fileName); // Save in the `public/uploads` directory
-      saveBase64Image(imageUrl, filePath); // Save the Base64 image to the file system
-      imageUrlPath = `/uploads/${fileName}`; // Public URL of the image
-    }
 
-    // Create the post in the Prisma database
-    const createPost = await prisma.post.create({
-      data: {
-        content,
-        imageUrl: imageUrlPath, // Save the image path in the database
-        userId: id, // Associate the post with the user
-      },
-    });
+    // Handle image upload (if provided)
+   
 
     // Return the created post response
->>>>>>> c9accc21b96e65e3562fa802dda2893abdd6427d
+
     return NextResponse.json(createPost, { status: 201 });
   } catch (error) {
     console.error('Error creating post:', error);
