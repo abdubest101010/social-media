@@ -18,27 +18,30 @@ export default function PostForm() {
     setError(null);
     setSuccess(null);
 
+    // Check if both content and image are provided
     if (!content.trim() || !image) {
       setError('Content and image are both required.');
       return;
     }
 
+    // Create a FileReader to convert the image to Base64
     const reader = new FileReader();
     reader.onload = async () => {
       const base64Image = reader.result;
 
       try {
+        // Make API call to create a post
         const response = await axios.post('/api/posts', {
-          id: session?.user?.id,
+          id: session?.user?.id, // User ID from session
           content,
-          imageUrl: base64Image,
+          imageUrl: base64Image, // Send the Base64 encoded image
         });
 
         if (response.status === 201) {
           setSuccess('Post created successfully!');
-          setContent('');
-          setImage(null);
-          setImagePreview(null); // Clear preview after submission
+          setContent(''); // Reset content field
+          setImage(null); // Reset image state
+          setImagePreview(null); // Reset image preview
         }
       } catch (error) {
         console.error('Error creating post:', error);
@@ -46,7 +49,7 @@ export default function PostForm() {
       }
     };
 
-    reader.readAsDataURL(image);
+    reader.readAsDataURL(image); // Convert the image to Base64
   };
 
   const handleImageChange = (e) => {
@@ -57,9 +60,9 @@ export default function PostForm() {
       // Generate image preview
       const reader = new FileReader();
       reader.onload = () => {
-        setImagePreview(reader.result); // Update image preview with Base64
+        setImagePreview(reader.result); // Set the preview with Base64 data
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(file); // Convert the selected image to Base64
     }
   };
 
