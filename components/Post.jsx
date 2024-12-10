@@ -59,11 +59,11 @@ export default function PostForm() {
       // Generate image preview
       const reader = new FileReader();
       reader.onload = () => {
-<<<<<<< HEAD
+
         setImagePreview(reader.result); // Update image preview
-=======
+
         setImagePreview(reader.result); // Set the preview with Base64 data
->>>>>>> c9accc21b96e65e3562fa802dda2893abdd6427d
+
       };
       reader.readAsDataURL(file); // Convert the selected image to Base64
     }
