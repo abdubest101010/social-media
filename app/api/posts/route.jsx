@@ -3,41 +3,46 @@ import fs from 'fs';
 import path from 'path';
 import prisma from '@/lib/prisma';
 
-// Function to save Base64 image to a file
+// Function to save Base64 image
 const saveBase64Image = (base64Data, filePath) => {
-  const base64Image = base64Data.split(';base64,').pop(); // Extract Base64 content
-  fs.writeFileSync(filePath, base64Image, { encoding: 'base64' }); // Save as file
+  const base64Image = base64Data.split(';base64,').pop();
+  fs.writeFileSync(filePath, base64Image, { encoding: 'base64' }); // Save the image file
 };
 
-// POST method to handle post creation
+// POST handler
 export async function POST(req) {
   try {
     const body = await req.json();
     const { id, content, imageUrl } = body;
 
-    // Validate user ID
+    // Validate ID and Content
     if (!id) {
-      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    }
+    if (!content) {
+      return NextResponse.json({ error: 'Content is required' }, { status: 400 });
     }
 
-    // Save the image (if provided)
+    // Handle image upload
     let imageUrlPath = null;
     if (imageUrl) {
-      const fileName = `${Date.now()}-post-image.jpg`; // Unique file name
-      const filePath = path.join(process.cwd(), 'public', 'uploads', fileName); // Full path
-      saveBase64Image(imageUrl, filePath); // Save image to file
-      imageUrlPath = `/uploads/${fileName}`; // Relative URL to store in DB
+      const fileName = `${Date.now()}-post-image.jpg`;
+      const filePath = path.join(process.cwd(), 'public', 'uploads', fileName);
+
+      saveBase64Image(imageUrl, filePath); // Save image
+      imageUrlPath = `/uploads/${fileName}`; // Publicly accessible URL
     }
 
-    // Create the post in the database
+    // Create post in the database
     const createPost = await prisma.post.create({
       data: {
         content,
-        imageUrl: imageUrlPath,
-        userId: id, // Associate the post with the user
+        imageUrl: imageUrlPath, // Save the image path
+        userId: id, // Link post to user
       },
     });
 
+    // Respond with the created post
     return NextResponse.json(createPost, { status: 201 });
   } catch (error) {
     console.error('Error creating post:', error);
