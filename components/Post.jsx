@@ -18,35 +18,41 @@ export default function PostForm() {
     setError(null);
     setSuccess(null);
 
-    if (!content.trim() || !image) {
-      setError('Content and image are both required.');
+    // Validation
+    if (!content.trim()) {
+      setError('Content is required.');
+      return;
+    }
+
+    if (!image) {
+      setError('Image is required.');
       return;
     }
 
     const reader = new FileReader();
     reader.onload = async () => {
-      const base64Image = reader.result;
+      const base64Image = reader.result; // Get the Base64 string
 
       try {
         const response = await axios.post('/api/posts', {
-          id: session?.user?.id, // User ID from session
+          id: session?.user?.id, // Pass user ID from session
           content,
-          imageUrl: base64Image, // Send Base64 image to the server
+          imageUrl: base64Image, // Send Base64 image
         });
 
         if (response.status === 201) {
           setSuccess('Post created successfully!');
           setContent('');
           setImage(null);
-          setImagePreview(null);
+          setImagePreview(null); // Clear form after success
         }
-      } catch (error) {
-        console.error('Error creating post:', error);
-        setError('Failed to create post. Please try again later.');
+      } catch (err) {
+        console.error('Error creating post:', err);
+        setError('Failed to create post. Please try again.');
       }
     };
 
-    reader.readAsDataURL(image); // Read file as Base64
+    reader.readAsDataURL(image); // Convert file to Base64
   };
 
   const handleImageChange = (e) => {
@@ -56,9 +62,7 @@ export default function PostForm() {
 
       // Generate image preview
       const reader = new FileReader();
-      reader.onload = () => {
-        setImagePreview(reader.result);
-      };
+      reader.onload = () => setImagePreview(reader.result);
       reader.readAsDataURL(file);
     }
   };
@@ -71,35 +75,21 @@ export default function PostForm() {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="What's on your mind?"
-          className="w-full border p-2 rounded mb-4 text-blue"
+          className="w-full border p-2 rounded mb-4"
         ></textarea>
 
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="mb-4"
-        />
+        <input type="file" accept="image/*" onChange={handleImageChange} className="mb-4" />
 
         {imagePreview && (
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Image Preview:
             </label>
-            <Image
-              src={imagePreview}
-              alt="Preview"
-              width={300}
-              height={150}
-              className="max-w-full h-auto rounded-lg border"
-            />
+            <Image src={imagePreview} alt="Preview" width={300} height={150} className="rounded" />
           </div>
         )}
 
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
+        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
           Post
         </button>
       </form>
