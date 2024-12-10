@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
-import Image from 'next/image';
 
 export default function PostForm() {
   const { data: session } = useSession();
@@ -57,14 +56,14 @@ export default function PostForm() {
       // Generate image preview
       const reader = new FileReader();
       reader.onload = () => {
-        setImagePreview(reader.result); // Update image preview with Base64
+        setImagePreview(reader.result); // Update image preview
       };
       reader.readAsDataURL(file);
     }
   };
 
   return (
-    <div className="post-form p-4 rounded-lg mb-4">
+    <div className="post-form  p-4 rounded-lg mb-4">
       <h2 className="text-xl font-bold mb-4">Create a New Post</h2>
       <form onSubmit={handleSubmit}>
         <textarea
@@ -86,13 +85,10 @@ export default function PostForm() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Image Preview:
             </label>
-            <Image
-              src={imagePreview} // Base64 data URL as `src`
+            <img
+              src={imagePreview}
               alt="Preview"
-              width={300}
-              height={600}
-              className="rounded-lg border"
-              unoptimized // Bypass optimization for Base64 images
+              className="max-w-full h-auto rounded-lg border"
             />
           </div>
         )}

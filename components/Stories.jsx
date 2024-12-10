@@ -6,7 +6,6 @@ import Link from 'next/link';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import Slider from 'react-slick'; // Import react-slick for sliding effect
-import Image from 'next/image';
 
 export default function ActiveStories() {
   const [stories, setStories] = useState([]);
@@ -64,11 +63,9 @@ export default function ActiveStories() {
         <div>
           <Link href="/stories/post">
             <div className="story-card relative w-40 h-56 rounded-lg overflow-hidden border-2 border-blue-500 bg-white shadow-lg">
-              <Image
+              <img
                 src="/bg.png" // Background image for create story
                 alt="background"
-                width={160}
-                height={224}
                 className="w-full h-full object-cover rounded-lg transition-transform duration-300 hover:scale-105"
               />
               <div className="absolute inset-0 bg-black opacity-30"></div>
@@ -83,11 +80,9 @@ export default function ActiveStories() {
         {stories.map((story) => (
           <div key={story.id}>
             <div className="story-card relative w-40 h-56 rounded-lg overflow-hidden border-2 border-blue-500 bg-white shadow-lg">
-              <Image
+              <img
                 src={story.imageUrl}
                 alt={story.content}
-                width={160}
-                height={224}
                 className="w-full h-full object-cover rounded-lg transition-transform duration-300 hover:scale-105"
               />
               <div className="absolute inset-0 bg-black opacity-30"></div>

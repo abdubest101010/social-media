@@ -56,7 +56,6 @@ export default function PostsPage({effectiveUserId}) {
   
         // Update state with the processed posts
         setPosts(postsWithStatus);
-        console.log(posts)
       } catch (error) {
         console.error('Failed to fetch posts:', error);
       } finally {
@@ -331,10 +330,6 @@ export default function PostsPage({effectiveUserId}) {
     </div>
   ))}
 </div>
-
-  
-
-
   )}
 </div>
 
