@@ -9,7 +9,7 @@ export default function PostForm() {
   const { data: session } = useSession();
   const [content, setContent] = useState('');
   const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null); // State for image preview
+  const [imagePreview, setImagePreview] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -29,16 +29,16 @@ export default function PostForm() {
 
       try {
         const response = await axios.post('/api/posts', {
-          id: session?.user?.id,
+          id: session?.user?.id, // User ID from session
           content,
-          imageUrl: base64Image,
+          imageUrl: base64Image, // Send Base64 image to the server
         });
 
         if (response.status === 201) {
           setSuccess('Post created successfully!');
           setContent('');
           setImage(null);
-          setImagePreview(null); // Clear preview after submission
+          setImagePreview(null);
         }
       } catch (error) {
         console.error('Error creating post:', error);
@@ -46,7 +46,7 @@ export default function PostForm() {
       }
     };
 
-    reader.readAsDataURL(image);
+    reader.readAsDataURL(image); // Read file as Base64
   };
 
   const handleImageChange = (e) => {
@@ -57,14 +57,14 @@ export default function PostForm() {
       // Generate image preview
       const reader = new FileReader();
       reader.onload = () => {
-        setImagePreview(reader.result); // Update image preview
+        setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
     }
   };
 
   return (
-    <div className="post-form  p-4 rounded-lg mb-4">
+    <div className="post-form p-4 rounded-lg mb-4">
       <h2 className="text-xl font-bold mb-4">Create a New Post</h2>
       <form onSubmit={handleSubmit}>
         <textarea
