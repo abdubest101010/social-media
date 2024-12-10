@@ -1,19 +1,18 @@
-'use client'; // Ensure this component is client-side
+'use client'; // Ensure this component runs on the client-side
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { Suspense } from 'react';
 
 const Verify = () => {
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams(); // For reading query parameters
   const router = useRouter();
 
-  // useEffect to ensure this runs only on the client
   useEffect(() => {
     const verifyUser = async () => {
-      const code = searchParams.get('code');
-      console.log('Code received in Verify component:', code);
+      const code = searchParams?.get('code'); // Safely access the query param
 
       if (!code) {
         setError('Invalid verification link. Code is missing.');
@@ -23,7 +22,6 @@ const Verify = () => {
       try {
         const response = await fetch(`/api/verify?code=${code}`);
         const result = await response.json();
-        console.log('API response:', result);
 
         if (response.status === 200) {
           setMessage('Email verified successfully! Redirecting...');
@@ -37,20 +35,21 @@ const Verify = () => {
       }
     };
 
-    // Only call verifyUser if searchParams are available
     if (searchParams) {
       verifyUser();
     }
   }, [searchParams, router]);
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded shadow-md w-80">
-        <h1 className="text-2xl font-bold mb-4">Email Verification</h1>
-        {message && <p className="text-green-500">{message}</p>}
-        {error && <p className="text-red-500">{error}</p>}
+    <Suspense fallback={<p>Loading...</p>}>
+      <div className="flex flex-col justify-center items-center min-h-screen bg-gray-100">
+        <div className="bg-white p-8 rounded shadow-md w-80">
+          <h1 className="text-2xl font-bold mb-4">Email Verification</h1>
+          {message && <p className="text-green-500">{message}</p>}
+          {error && <p className="text-red-500">{error}</p>}
+        </div>
       </div>
-    </div>
+    </Suspense>
   );
 };
 
