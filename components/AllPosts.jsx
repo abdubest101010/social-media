@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import FriendsList from './ShareFriend';
 import { AiFillLike, AiOutlineComment, AiOutlineLike, AiOutlineShareAlt } from 'react-icons/ai';
 
-export default function PostsPage({effectiveUserId, id}) {
+export default function PostsPage({effectiveUserId}) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const { data: session, status } = useSession();
@@ -19,38 +19,30 @@ export default function PostsPage({effectiveUserId, id}) {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const method = effectiveUserId || id ? 'POST' : 'GET';
-        const url = id ? '/api/posts/singlePost' : '/api/posts/getPost';
+        // Determine the HTTP method and endpoint
+        const method = effectiveUserId ? 'POST' : 'GET';
+        const url = '/api/posts/getPost';
   
-        const body =
-          id && effectiveUserId
-            ? { id, effectiveUserId } // If both `id` and `effectiveUserId` are provided
-            : id
-            ? { id } // If only `id` is provided
-            : { effectiveUserId }; // If only `effectiveUserId` is provided
-  
+        // Create fetch options if POST is needed
         const options =
           method === 'POST'
             ? {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
+                body: JSON.stringify({  effectiveUserId }),
               }
             : {};
   
+        // Fetch data from the endpoint
         const res = await fetch(url, options);
-  
-        if (!res.ok) {
-          throw new Error(`Failed to fetch posts: ${res.status}`);
-        }
-  
         const data = await res.json();
   
-        // Process posts (sorting, mapping, etc.)
+        // Sort posts by creation date
         const sortedPosts = data.sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
   
+        // Map posts to include additional status
         const postsWithStatus = sortedPosts.map((post) => ({
           ...post,
           hasLiked: post.likes?.some((like) => like.userId === effectiveUserId),
@@ -62,6 +54,7 @@ export default function PostsPage({effectiveUserId, id}) {
           showLikes: false,
         }));
   
+        // Update state with the processed posts
         setPosts(postsWithStatus);
       } catch (error) {
         console.error('Failed to fetch posts:', error);
@@ -74,8 +67,7 @@ export default function PostsPage({effectiveUserId, id}) {
     if (status === 'authenticated') {
       fetchPosts();
     }
-  }, [status, effectiveUserId, id]); // Include `id` in the dependency array
-  
+  }, [status, effectiveUserId]);
   
 
   const handleLike = async (postId, hasLiked) => {

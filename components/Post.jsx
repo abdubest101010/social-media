@@ -90,7 +90,7 @@ export default function PostForm() {
               src={imagePreview}
               alt="Preview"
               width={300}
-              height={150}
+              height={600}
               className="max-w-full h-auto rounded-lg border"
             />
           </div>

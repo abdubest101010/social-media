@@ -1,6 +1,6 @@
-'use client'; // Ensure that this component is treated as client-side
+'use client'; // Ensure this component is client-side
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 const Verify = () => {
@@ -9,6 +9,7 @@ const Verify = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  // useEffect to ensure this runs only on the client
   useEffect(() => {
     const verifyUser = async () => {
       const code = searchParams.get('code');
@@ -36,7 +37,10 @@ const Verify = () => {
       }
     };
 
-    verifyUser();
+    // Only call verifyUser if searchParams are available
+    if (searchParams) {
+      verifyUser();
+    }
   }, [searchParams, router]);
 
   return (
@@ -50,11 +54,4 @@ const Verify = () => {
   );
 };
 
-// Wrapping the component in Suspense Boundary
-export default function VerifyPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <Verify />
-    </Suspense>
-  );
-}
+export default Verify;
