@@ -57,14 +57,14 @@ export default function PostForm() {
       // Generate image preview
       const reader = new FileReader();
       reader.onload = () => {
-        setImagePreview(reader.result); // Update image preview
+        setImagePreview(reader.result); // Update image preview with Base64
       };
       reader.readAsDataURL(file);
     }
   };
 
   return (
-    <div className="post-form  p-4 rounded-lg mb-4">
+    <div className="post-form p-4 rounded-lg mb-4">
       <h2 className="text-xl font-bold mb-4">Create a New Post</h2>
       <form onSubmit={handleSubmit}>
         <textarea
@@ -87,11 +87,12 @@ export default function PostForm() {
               Image Preview:
             </label>
             <Image
-              src={imagePreview}
+              src={imagePreview} // Base64 data URL as `src`
               alt="Preview"
               width={300}
               height={600}
-              className="max-w-full h-auto rounded-lg border"
+              className="rounded-lg border"
+              unoptimized // Bypass optimization for Base64 images
             />
           </div>
         )}
