@@ -1,56 +1,43 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import prisma from '@/lib/prisma';
+import cloudinary from '@/lib/cloudinary'; // Cloudinary utility for image upload
+import prisma from '@/lib/prisma'; // Prisma client for database interaction
 
-// Function to save Base64 image to a file
-const saveBase64Image = (base64Data, filePath) => {
-  const base64Image = base64Data.split(';base64,').pop();
-  fs.writeFile(filePath, base64Image, { encoding: 'base64' }, (err) => {
-    if (err) {
-      console.error('Error saving the image:', err);
-    } else {
-      console.log('Image saved successfully');
-    }
-  });
-};
-
-// POST method to handle story creation with Base64 image
 export async function POST(req) {
   try {
-    const body = await req.json(); // Parse the incoming request body
-    const { userId, content, imageUrl } = body;
+    const body = await req.json(); // Parse the incoming JSON body
+    const { id, content, imageUrl } = body; // Destructure the fields
 
-    // Validate user ID presence
-    if (!userId) {
-      console.error('User ID is missing in the request.');
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    // Validate that the ID is provided
+    if (!id) {
+      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
     }
 
-    // Handle image saving if present
-    let imageUrlPath = null;
+    let imageUrlPath = null; // Variable to store Cloudinary URL
+
+    // If imageUrl is provided, upload to Cloudinary
     if (imageUrl) {
-      const fileName = `${Date.now()}-story-image.jpg`; // Unique file name
-      const filePath = path.join(process.cwd(), 'public', 'uploads', fileName);
-      saveBase64Image(imageUrl, filePath); // Save the Base64 image
-      imageUrlPath = `/uploads/${fileName}`;
+      const base64Image = imageUrl.split(';base64,').pop(); // Extract base64 string from image URL
+      const result = await cloudinary.uploader.upload(`data:image/jpeg;base64,${base64Image}`, {
+        folder: 'stories', // Save uploaded images in 'stories' folder
+      });
+      imageUrlPath = result.secure_url; // Store the secure URL of the uploaded image
     }
 
-    // Set expiration time (e.g., 24 hours from now)
+    // Set expiration time for the story (24 hours in this case)
     const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24); // Adjust this as per your requirement
+    expiresAt.setHours(expiresAt.getHours() + 24); // Set expiration to 24 hours from now
 
-    // Create a new story in the Prisma database
+    // Create a new story record in the Prisma database
     const createStory = await prisma.story.create({
       data: {
-        content,
-        imageUrl: imageUrlPath, // Save image URL to the database
-        userId: userId, // Assuming this is the user ID
-        expiresAt: expiresAt, // Set expiration date
+        content, // Story content
+        imageUrl: imageUrlPath, // Cloudinary URL for image
+        userId: id, // The user ID associated with the story
+        expiresAt, // Set the expiration time
       },
     });
 
-    console.log('Create story details:', createStory);
+    // Return the created story details with a 201 status
     return NextResponse.json(createStory, { status: 201 });
   } catch (error) {
     console.error('Error creating story:', error);

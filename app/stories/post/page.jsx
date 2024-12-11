@@ -31,7 +31,7 @@ const StoryForm = () => {
 
       try {
         const response = await axios.post("/api/stories/create", {
-          userId: session?.user?.id, // Use the authenticated user's ID
+          id: session?.user?.id, // Use the authenticated user's ID (id instead of userId)
           content,
           imageUrl: base64Image, // Send image as base64
         });

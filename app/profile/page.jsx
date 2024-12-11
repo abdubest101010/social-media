@@ -13,22 +13,20 @@ export default function ProfileForm() {
   const [worksAt, setWorksAt] = useState('');
   const [bio, setBio] = useState('');
   const [profilePictureBase64, setProfilePictureBase64] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null); // State for image preview
-  const [isFormValid, setIsFormValid] = useState(false); // State for form validation
-  const [errorMessage, setErrorMessage] = useState(null); // State to store error messages
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isFormValid, setIsFormValid] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const router = useRouter();
   const { data: session, status } = useSession();
   const userId = session?.user?.id;
 
-  // Redirect to login if user is not authenticated
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
 
-  // Fetch user info and populate the form
   useEffect(() => {
     const fetchUserInfo = async () => {
       if (userId) {
@@ -61,29 +59,22 @@ export default function ProfileForm() {
     fetchUserInfo();
   }, [userId]);
 
-  // Form validation: Ensure all fields are filled
   useEffect(() => {
-    if (firstName && lastName && livingIn && wentTo && worksAt && bio) {
-      setIsFormValid(true);
-    } else {
-      setIsFormValid(false);
-    }
+    setIsFormValid(firstName && lastName && livingIn && wentTo && worksAt && bio);
   }, [firstName, lastName, livingIn, wentTo, worksAt, bio]);
 
-  // Handle image file selection and preview
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfilePictureBase64(reader.result);
-        setImagePreview(reader.result); // Set the image preview
+        setImagePreview(reader.result);
       };
-      reader.readAsDataURL(file); // Convert file to Base64
+      reader.readAsDataURL(file);
     }
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -92,7 +83,6 @@ export default function ProfileForm() {
       return;
     }
 
-    // Prepare profile data
     const profileData = {
       userId,
       firstName,
@@ -101,7 +91,7 @@ export default function ProfileForm() {
       wentTo,
       worksAt,
       bio,
-      profilePicture: profilePictureBase64, // Send Base64 encoded image
+      profilePicture: profilePictureBase64,
     };
 
     try {
@@ -115,133 +105,98 @@ export default function ProfileForm() {
 
       const result = await response.json();
       if (response.ok) {
-        console.log('Profile updated successfully', result);
-        router.push('/'); // Redirect to profile after update
-      } else {
-        console.error('Error updating profile:', result.error);
+        router.push('/'); 
+        
+      } 
+      
+      else {
         setErrorMessage(result.error || 'Something went wrong.');
       }
     } catch (error) {
-      console.error('An error occurred while updating the profile:', error);
       setErrorMessage('An error occurred while updating the profile.');
     }
   };
 
-  // Loading state if session is being fetched
   if (status === 'loading') {
     return <p>Loading...</p>;
   }
 
-  // Render the form only if the session is available
   if (session) {
     return (
-      <form
-        onSubmit={handleSubmit}
-        className="max-w-lg mx-auto p-8 bg-white shadow-lg rounded-lg space-y-6"
-      >
+      <form onSubmit={handleSubmit} className="max-w-lg mx-auto p-8 bg-white shadow-lg rounded-lg space-y-6">
         <h2 className="text-2xl font-semibold text-center text-gray-800">Update Profile</h2>
-
-        {/* Display error message */}
         {errorMessage && <div className="text-red-500 text-sm text-center">{errorMessage}</div>}
-
         <div>
           <label className="block text-sm font-medium text-gray-700">First Name</label>
           <input
             type="text"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder={firstName || 'Enter your first name'}
+            className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             required
           />
         </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-700">Last Name</label>
           <input
             type="text"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder={lastName || 'Enter your last name'}
+            className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             required
           />
         </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-700">Living In</label>
           <input
             type="text"
             value={livingIn}
             onChange={(e) => setLivingIn(e.target.value)}
-            className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder={livingIn || 'Enter where you live'}
+            className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             required
           />
         </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-700">Went To</label>
           <input
             type="text"
             value={wentTo}
             onChange={(e) => setWentTo(e.target.value)}
-            className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder={wentTo || 'Enter your school or university'}
+            className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             required
           />
         </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-700">Works At</label>
           <input
             type="text"
             value={worksAt}
             onChange={(e) => setWorksAt(e.target.value)}
-            className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder={worksAt || 'Enter your workplace'}
+            className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             required
           />
         </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-700">Bio</label>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
-            className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder={bio || 'Enter something about yourself'}
+            className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             required
           ></textarea>
         </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-700">Profile Picture</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <input type="file" accept="image/*" onChange={handleFileChange} className="mt-1 w-full p-2" />
         </div>
-
         {imagePreview && (
           <div className="text-center">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Image Preview</label>
-            <Image
-              src={imagePreview}
-              unoptimized 
-              width={50}
-              height={50}
-              alt="Profile Preview"
-              className="mx-auto w-32 h-32 rounded-full object-cover border border-gray-300"
-            />
+            <Image src={imagePreview} unoptimized width={100} height={100} alt="Preview" className="rounded-full" />
           </div>
         )}
-
         <button
           type="submit"
-          className={`w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+          className={`w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg ${
             isFormValid ? '' : 'opacity-50 cursor-not-allowed'
           }`}
           disabled={!isFormValid}

@@ -1,43 +1,39 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import prisma from '@/lib/prisma'; // Import Prisma client
+import cloudinary from '@/lib/cloudinary';
+import prisma from '@/lib/prisma';
 
-// Function to save Base64 image to a file
-const saveBase64Image = (base64Data, filePath) => {
-  const base64Image = base64Data.split(';base64,').pop();
-  fs.writeFile(filePath, base64Image, { encoding: 'base64' }, (err) => {
-    if (err) {
-      console.error('Error saving the image:', err);
-    } else {
-      console.log('Image saved successfully');
-    }
-  });
-};
-
-// PUT method to handle profile update with Base64 image
-export async function PUT(req, res) {
+export async function PUT(req) {
   try {
-    const { userId, firstName, lastName, livingIn, wentTo, worksAt, bio, profilePicture } = await req.json();
+    const body = await req.json();
+    const {
+      userId,
+      firstName,
+      lastName,
+      livingIn,
+      wentTo,
+      worksAt,
+      bio,
+      profilePicture,
+    } = body;
 
-    
     if (!userId) {
-      console.error('userId is missing in the request.');
-      return NextResponse.json({ error: 'userId is required' }, { status: 400 });
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    // Handle profile picture saving if present
     let profilePictureUrl = null;
+
+    // Upload the profile picture to Cloudinary if present
     if (profilePicture) {
-      const fileName = `${userId}-profile-picture.jpg`; // 
-      const filePath = path.join(process.cwd(), 'public', 'uploads', fileName);
-      saveBase64Image(profilePicture, filePath); // Save the Base64 image
-      profilePictureUrl = `/uploads/${fileName}`;
+      const base64Image = profilePicture.split(';base64,').pop();
+      const result = await cloudinary.uploader.upload(`data:image/jpeg;base64,${base64Image}`, {
+        folder: 'profiles',
+      });
+      profilePictureUrl = result.secure_url;
     }
 
     // Update the user in the Prisma database
     const updatedUser = await prisma.user.update({
-      where: { id:userId }, 
+      where: { id: userId },
       data: {
         firstName,
         lastName,
@@ -45,12 +41,11 @@ export async function PUT(req, res) {
         wentTo,
         worksAt,
         bio,
-        profilePicture: profilePictureUrl, // Save profile picture URL to the database
+        profilePicture: profilePictureUrl,
       },
     });
 
-    console.log('Updated user details:', updatedUser);
-    return NextResponse.json(updatedUser);
+    return NextResponse.json(updatedUser, { status: 200 });
   } catch (error) {
     console.error('Error updating profile:', error);
     return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });

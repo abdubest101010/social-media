@@ -3,52 +3,56 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 export default function PostForm() {
   const { data: session } = useSession();
   const [content, setContent] = useState('');
   const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null); // State for image preview
+  const [imagePreview, setImagePreview] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-
+  const [isLoading, setIsLoading] = useState(false);
+ const router=useRouter()
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+    setIsLoading(true);
 
-    // Check if both content and image are provided
     if (!content.trim() || !image) {
       setError('Content and image are both required.');
+      setIsLoading(false);
       return;
     }
 
-    // Create a FileReader to convert the image to Base64
     const reader = new FileReader();
     reader.onload = async () => {
       const base64Image = reader.result;
 
       try {
-        // Make API call to create a post
         const response = await axios.post('/api/posts', {
-          id: session?.user?.id, // User ID from session
+          id: session?.user?.id,
           content,
-          imageUrl: base64Image, // Send the Base64 encoded image
+          imageUrl: base64Image,
         });
 
         if (response.status === 201) {
           setSuccess('Post created successfully!');
-          setContent(''); // Reset content field
-          setImage(null); // Reset image state
-          setImagePreview(null); // Reset image preview
+          setContent('');
+          setImage(null);
+          setImagePreview(null);
+          window.location.reload();  // Use window.location.reload() to reload the page
         }
       } catch (error) {
         console.error('Error creating post:', error);
         setError('Failed to create post. Please try again later.');
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    reader.readAsDataURL(image); // Convert the image to Base64
+    reader.readAsDataURL(image);
   };
 
   const handleImageChange = (e) => {
@@ -56,28 +60,23 @@ export default function PostForm() {
     if (file) {
       setImage(file);
 
-      // Generate image preview
       const reader = new FileReader();
       reader.onload = () => {
-
-        setImagePreview(reader.result); // Update image preview
-
-        setImagePreview(reader.result); // Set the preview with Base64 data
-
+        setImagePreview(reader.result);
       };
-      reader.readAsDataURL(file); // Convert the selected image to Base64
+      reader.readAsDataURL(file);
     }
   };
 
   return (
-    <div className="post-form  p-4 rounded-lg mb-4">
+    <div className="post-form p-4 rounded-lg mb-4">
       <h2 className="text-xl font-bold mb-4">Create a New Post</h2>
       <form onSubmit={handleSubmit}>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="What's on your mind?"
-          className="w-full border p-2 rounded mb-4 text-blue"
+          className="w-full border p-2 rounded mb-4"
         ></textarea>
 
         <input
@@ -102,9 +101,10 @@ export default function PostForm() {
 
         <button
           type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className={`bg-blue-500 text-white px-4 py-2 rounded ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={isLoading}
         >
-          Post
+          {isLoading ? 'Posting...' : 'Post'}
         </button>
       </form>
 
