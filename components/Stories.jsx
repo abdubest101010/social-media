@@ -17,6 +17,7 @@ export default function ActiveStories() {
     const fetchActiveStories = async () => {
       try {
         const response = await axios.get('/api/stories/active'); // Fetch active stories
+        console.log(response.data); // Log to check the response structure
         setStories(response.data); // Set the fetched stories to state
       } catch (error) {
         console.error('Error fetching active stories:', error);
@@ -84,7 +85,7 @@ export default function ActiveStories() {
           <div key={story.id}>
             <div className="story-card relative w-40 h-56 rounded-lg overflow-hidden border-2 border-blue-500 bg-white shadow-lg">
               <Image
-                src={story.imageUrl} // Assuming imageUrl is a valid Cloudinary URL
+                src={story.imageUrl || "/bg.png"} // Fallback to a default image if imageUrl is not available
                 alt={story.content}
                 width={160}
                 height={224}
@@ -95,7 +96,7 @@ export default function ActiveStories() {
                 <h3 className="font-semibold">{story.user.username}</h3> {/* Username at the top */}
               </div>
               <div className="absolute bottom-0 left-0 p-2 text-white">
-                <p className="font-semibold">{story.content}</p>
+                <p className="font-semibold">{story.content}</p> {/* Story content */}
               </div>
             </div>
           </div>

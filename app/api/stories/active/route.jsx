@@ -3,10 +3,9 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Get the current date and time to compare with story expiration
     const currentDateTime = new Date();
-    
-    // Fetch stories that are not expired
+
+    // Fetch stories that are not expired and include content, imageUrl, and user info
     const activeStories = await prisma.story.findMany({
       where: {
         expiresAt: {
@@ -17,8 +16,7 @@ export async function GET() {
         user: {
           select: {
             id: true,
-            username: true,
-            // other user fields you may want to include
+            username: true, // Include the user's username
           },
         },
       },
