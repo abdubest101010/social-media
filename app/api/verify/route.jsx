@@ -53,6 +53,14 @@ export async function GET(req) {
     });
 
     console.log("User successfully verified:", user.id);
+    const welcomeMessage = `Welcome to our platform, ${username}! We're excited to have you on board.`;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Welcome to our Platform!',
+      text: welcomeMessage,
+    });
     return new Response(
       JSON.stringify({ message: "Email verified successfully!" }),
       { status: 200 }
